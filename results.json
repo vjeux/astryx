@@ -1,0 +1,3880 @@
+{
+ "chromium": "149.0.7827.55",
+ "dpr": 2,
+ "viewport": "1000x700",
+ "results": [
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "clickablecard",
+   "story": "core-clickablecard--nested-button",
+   "scheme": "light",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "a \"Product card\"",
+      "name": "Product card",
+      "role": "link",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-clickablecard-light-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Add to cart\"",
+      "name": "Add to cart",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 84,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      },
+      {
+       "description": "button \"Add to cart\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 84,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "main-clickablecard-light-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Add to cart\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Add to cart\"",
+     "name": "Add to cart",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 84,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-clickablecard-light-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 152
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "clickablecard",
+   "story": "core-clickablecard--nested-button",
+   "scheme": "dark",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "dark",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "a \"Product card\"",
+      "name": "Product card",
+      "role": "link",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-clickablecard-dark-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Add to cart\"",
+      "name": "Add to cart",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 84,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      },
+      {
+       "description": "button \"Add to cart\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 84,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         }
+        },
+        "minSampled": 15.25,
+        "minComputed": 15.25,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "main-clickablecard-dark-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Add to cart\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Add to cart\"",
+     "name": "Add to cart",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 84,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-clickablecard-dark-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 152
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "clickablecard",
+   "story": "core-clickablecard--nested-button",
+   "scheme": "forced",
+   "env": {
+    "forcedColors": true,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "a \"Product card\"",
+      "name": "Product card",
+      "role": "link",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-clickablecard-forced-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Add to cart\"",
+      "name": "Add to cart",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 84,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      },
+      {
+       "description": "button \"Add to cart\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 84,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgba(5, 0, 73, 0.8)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#050049",
+        "perSide": {
+         "left": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "right": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "top": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "bottom": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         }
+        },
+        "minSampled": 11.31,
+        "minComputed": 19.04,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "main-clickablecard-forced-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Add to cart\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Add to cart\"",
+     "name": "Add to cart",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 84,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-clickablecard-forced-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 152
+   }
+  },
+  {
+   "side": "head",
+   "commit": "643c67815a89859f06c8f8733a5bd3c3bf53d308",
+   "target": "clickablecard",
+   "story": "core-clickablecard--nested-button",
+   "scheme": "light",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "a \"Product card\"",
+      "name": "Product card",
+      "role": "link",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "head-clickablecard-light-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Add to cart\"",
+      "name": "Add to cart",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 84,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Add to cart\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 84,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "head-clickablecard-light-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Add to cart\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Add to cart\"",
+     "name": "Add to cart",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 84,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "head-clickablecard-light-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 152
+   }
+  },
+  {
+   "side": "head",
+   "commit": "643c67815a89859f06c8f8733a5bd3c3bf53d308",
+   "target": "clickablecard",
+   "story": "core-clickablecard--nested-button",
+   "scheme": "dark",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "dark",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "a \"Product card\"",
+      "name": "Product card",
+      "role": "link",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "head-clickablecard-dark-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Add to cart\"",
+      "name": "Add to cart",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 84,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Add to cart\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 84,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         }
+        },
+        "minSampled": 15.25,
+        "minComputed": 15.25,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "head-clickablecard-dark-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Add to cart\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Add to cart\"",
+     "name": "Add to cart",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 84,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "head-clickablecard-dark-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 152
+   }
+  },
+  {
+   "side": "head",
+   "commit": "643c67815a89859f06c8f8733a5bd3c3bf53d308",
+   "target": "clickablecard",
+   "story": "core-clickablecard--nested-button",
+   "scheme": "forced",
+   "env": {
+    "forcedColors": true,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "a \"Product card\"",
+      "name": "Product card",
+      "role": "link",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Product Name$29.99Add to cart\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 112
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "head-clickablecard-forced-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Add to cart\"",
+      "name": "Add to cart",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 84,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Add to cart\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 84,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgba(5, 0, 73, 0.8)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#050049",
+        "perSide": {
+         "left": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "right": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "top": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "bottom": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         }
+        },
+        "minSampled": 11.31,
+        "minComputed": 19.04,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "head-clickablecard-forced-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Add to cart\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Add to cart\"",
+     "name": "Add to cart",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 84,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "head-clickablecard-forced-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 152
+   }
+  },
+  {
+   "side": "head",
+   "commit": "643c67815a89859f06c8f8733a5bd3c3bf53d308",
+   "target": "selectablecard",
+   "story": "core-selectablecard--with-nested-button",
+   "scheme": "light",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "input[type=checkbox] \"Pro plan\"",
+      "name": "Pro plan",
+      "role": "checkbox",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Pro planDetails\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 84
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "head-selectablecard-light-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Details\"",
+      "name": "Details",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 56,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Details\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 56,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "head-selectablecard-light-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Details\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Details\"",
+     "name": "Details",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 56,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "head-selectablecard-light-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 124
+   }
+  },
+  {
+   "side": "head",
+   "commit": "643c67815a89859f06c8f8733a5bd3c3bf53d308",
+   "target": "selectablecard",
+   "story": "core-selectablecard--with-nested-button",
+   "scheme": "dark",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "dark",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "input[type=checkbox] \"Pro plan\"",
+      "name": "Pro plan",
+      "role": "checkbox",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Pro planDetails\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 84
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "head-selectablecard-dark-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Details\"",
+      "name": "Details",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 56,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Details\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 56,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 15.25,
+          "computed": 15.25
+         }
+        },
+        "minSampled": 15.25,
+        "minComputed": 15.25,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "head-selectablecard-dark-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Details\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Details\"",
+     "name": "Details",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 56,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "head-selectablecard-dark-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 124
+   }
+  },
+  {
+   "side": "head",
+   "commit": "643c67815a89859f06c8f8733a5bd3c3bf53d308",
+   "target": "selectablecard",
+   "story": "core-selectablecard--with-nested-button",
+   "scheme": "forced",
+   "env": {
+    "forcedColors": true,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "input[type=checkbox] \"Pro plan\"",
+      "name": "Pro plan",
+      "role": "checkbox",
+      "rect": {
+       "x": 27,
+       "y": 27,
+       "w": 1,
+       "h": 1
+      },
+      "visuallyHidden": true
+     },
+     "rings": [
+      {
+       "description": "div \"Pro planDetails\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 300,
+        "h": 84
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 12,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "head-selectablecard-forced-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Details\"",
+      "name": "Details",
+      "role": "button",
+      "rect": {
+       "x": 28,
+       "y": 56,
+       "w": 276,
+       "h": 32
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Details\"",
+       "relation": "focused",
+       "rect": {
+        "x": 28,
+        "y": 56,
+        "w": 276,
+        "h": 32
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgba(5, 0, 73, 0.8)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#050049",
+        "perSide": {
+         "left": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "right": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "top": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "bottom": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         }
+        },
+        "minSampled": 11.31,
+        "minComputed": 19.04,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=clip/clip contain=none clip-path=none radius=12px",
+       "holdsRing": true,
+       "pointsOutside": 0
+      }
+     ],
+     "frame": "head-selectablecard-forced-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Details\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Details\"",
+     "name": "Details",
+     "role": "button",
+     "rect": {
+      "x": 28,
+      "y": 56,
+      "w": 276,
+      "h": 32
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "head-selectablecard-forced-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 340,
+    "height": 124
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "item",
+   "story": "core-item--with-end-actions",
+   "scheme": "light",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Quarterly reportOpens the repo\"",
+      "name": "Quarterly reportOpens the repo",
+      "role": "button",
+      "rect": {
+       "x": 24,
+       "y": 24,
+       "w": 368,
+       "h": 40
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"Quarterly reportOpens the repo\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 420,
+        "h": 56
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-item-light-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Share Quarterly report\"",
+      "name": "Share Quarterly report",
+      "role": "button",
+      "rect": {
+       "x": 400,
+       "y": 30,
+       "w": 28,
+       "h": 28
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Share Quarterly report\"",
+       "relation": "focused",
+       "rect": {
+        "x": 400,
+        "y": 30,
+        "w": 28,
+        "h": 28
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [],
+     "frame": "main-item-light-b-nested-control.png"
+    },
+    {
+     "stop": 3,
+     "focused": {
+      "description": "button[type=button] \"Restore Archived notes\"",
+      "name": "Restore Archived notes",
+      "role": "button",
+      "rect": {
+       "x": 400,
+       "y": 86,
+       "w": 28,
+       "h": 28
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Restore Archived notes\"",
+       "relation": "focused",
+       "rect": {
+        "x": 400,
+        "y": 86,
+        "w": 28,
+        "h": 28
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [],
+     "frame": "main-item-light-b2-control-in-plain-row.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Share Quarterly report\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Share Quarterly report\"",
+     "name": "Share Quarterly report",
+     "role": "button",
+     "rect": {
+      "x": 400,
+      "y": 30,
+      "w": 28,
+      "h": 28
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-item-light-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 460,
+    "height": 138
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "item",
+   "story": "core-item--with-end-actions",
+   "scheme": "dark",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "dark",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Quarterly reportOpens the repo\"",
+      "name": "Quarterly reportOpens the repo",
+      "role": "button",
+      "rect": {
+       "x": 24,
+       "y": 24,
+       "w": 368,
+       "h": 40
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"Quarterly reportOpens the repo\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 420,
+        "h": 56
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-item-dark-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Share Quarterly report\"",
+      "name": "Share Quarterly report",
+      "role": "button",
+      "rect": {
+       "x": 400,
+       "y": 30,
+       "w": 28,
+       "h": 28
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Share Quarterly report\"",
+       "relation": "focused",
+       "rect": {
+        "x": 400,
+        "y": 30,
+        "w": 28,
+        "h": 28
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [],
+     "frame": "main-item-dark-b-nested-control.png"
+    },
+    {
+     "stop": 3,
+     "focused": {
+      "description": "button[type=button] \"Restore Archived notes\"",
+      "name": "Restore Archived notes",
+      "role": "button",
+      "rect": {
+       "x": 400,
+       "y": 86,
+       "w": 28,
+       "h": 28
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Restore Archived notes\"",
+       "relation": "focused",
+       "rect": {
+        "x": 400,
+        "y": 86,
+        "w": 28,
+        "h": 28
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [],
+     "frame": "main-item-dark-b2-control-in-plain-row.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Share Quarterly report\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Share Quarterly report\"",
+     "name": "Share Quarterly report",
+     "role": "button",
+     "rect": {
+      "x": 400,
+      "y": 30,
+      "w": 28,
+      "h": 28
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-item-dark-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 460,
+    "height": 138
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "item",
+   "story": "core-item--with-end-actions",
+   "scheme": "forced",
+   "env": {
+    "forcedColors": true,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Quarterly reportOpens the repo\"",
+      "name": "Quarterly reportOpens the repo",
+      "role": "button",
+      "rect": {
+       "x": 24,
+       "y": 24,
+       "w": 368,
+       "h": 40
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"Quarterly reportOpens the repo\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 420,
+        "h": 56
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-item-forced-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Share Quarterly report\"",
+      "name": "Share Quarterly report",
+      "role": "button",
+      "rect": {
+       "x": 400,
+       "y": 30,
+       "w": 28,
+       "h": 28
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Share Quarterly report\"",
+       "relation": "focused",
+       "rect": {
+        "x": 400,
+        "y": 30,
+        "w": 28,
+        "h": 28
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgba(5, 0, 73, 0.8)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#050049",
+        "perSide": {
+         "left": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "right": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "top": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "bottom": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         }
+        },
+        "minSampled": 11.31,
+        "minComputed": 19.04,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [],
+     "frame": "main-item-forced-b-nested-control.png"
+    },
+    {
+     "stop": 3,
+     "focused": {
+      "description": "button[type=button] \"Restore Archived notes\"",
+      "name": "Restore Archived notes",
+      "role": "button",
+      "rect": {
+       "x": 400,
+       "y": 86,
+       "w": 28,
+       "h": 28
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Restore Archived notes\"",
+       "relation": "focused",
+       "rect": {
+        "x": 400,
+        "y": 86,
+        "w": 28,
+        "h": 28
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgba(5, 0, 73, 0.8)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#050049",
+        "perSide": {
+         "left": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "right": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "top": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "bottom": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         }
+        },
+        "minSampled": 11.31,
+        "minComputed": 19.04,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [],
+     "frame": "main-item-forced-b2-control-in-plain-row.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Share Quarterly report\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Share Quarterly report\"",
+     "name": "Share Quarterly report",
+     "role": "button",
+     "rect": {
+      "x": 400,
+      "y": 30,
+      "w": 28,
+      "h": 28
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-item-forced-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 460,
+    "height": 138
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "token",
+   "story": "core-token--clickable-with-remove",
+   "scheme": "light",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Design\"",
+      "name": "Design",
+      "role": "button",
+      "rect": {
+       "x": 24,
+       "y": 18,
+       "w": 37.359375,
+       "h": 20
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "span \"Design\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 69.359375,
+        "h": 24
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 6,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-token-light-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Remove Design\"",
+      "name": "Remove Design",
+      "role": "button",
+      "rect": {
+       "x": 65.359375,
+       "y": 20,
+       "w": 16,
+       "h": 16
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Remove Design\"",
+       "relation": "focused",
+       "rect": {
+        "x": 65.359375,
+        "y": 20,
+        "w": 16,
+        "h": 16
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 9999,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#f0f0f0",
+          "ringShows": true,
+          "sampled": 15.11,
+          "computed": 15.11
+         },
+         "right": {
+          "ring": "#ffffff",
+          "outside": "#ffffff",
+          "ringShows": false,
+          "sampled": 1,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#ffffff",
+          "outside": "#ffffff",
+          "ringShows": false,
+          "sampled": 1,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 1,
+        "minComputed": 15.11,
+        "sidesShowing": 2,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+       "holdsRing": false,
+       "pointsOutside": 7
+      }
+     ],
+     "frame": "main-token-light-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Remove Design\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Remove Design\"",
+     "name": "Remove Design",
+     "role": "button",
+     "rect": {
+      "x": 65.359375,
+      "y": 20,
+      "w": 16,
+      "h": 16
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-token-light-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 172.703125,
+    "height": 64
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "token",
+   "story": "core-token--clickable-with-remove",
+   "scheme": "dark",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "dark",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Design\"",
+      "name": "Design",
+      "role": "button",
+      "rect": {
+       "x": 24,
+       "y": 18,
+       "w": 37.359375,
+       "h": 20
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "span \"Design\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 69.359375,
+        "h": 24
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 6,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-token-dark-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Remove Design\"",
+      "name": "Remove Design",
+      "role": "button",
+      "rect": {
+       "x": 65.359375,
+       "y": 20,
+       "w": 16,
+       "h": 16
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Remove Design\"",
+       "relation": "focused",
+       "rect": {
+        "x": 65.359375,
+        "y": 20,
+        "w": 16,
+        "h": 16
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 9999,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#3c3c3c",
+          "ringShows": true,
+          "sampled": 9.77,
+          "computed": 9.77
+         },
+         "right": {
+          "ring": "#262626",
+          "outside": "#262626",
+          "ringShows": false,
+          "sampled": 1,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#262626",
+          "outside": "#262626",
+          "ringShows": false,
+          "sampled": 1,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 1,
+        "minComputed": 9.77,
+        "sidesShowing": 2,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+       "holdsRing": false,
+       "pointsOutside": 7
+      }
+     ],
+     "frame": "main-token-dark-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Remove Design\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Remove Design\"",
+     "name": "Remove Design",
+     "role": "button",
+     "rect": {
+      "x": 65.359375,
+      "y": 20,
+      "w": 16,
+      "h": 16
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-token-dark-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 172.703125,
+    "height": 64
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "token",
+   "story": "core-token--clickable-with-remove",
+   "scheme": "forced",
+   "env": {
+    "forcedColors": true,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Design\"",
+      "name": "Design",
+      "role": "button",
+      "rect": {
+       "x": 24,
+       "y": 18,
+       "w": 37.359375,
+       "h": 20
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "span \"Design\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 69.359375,
+        "h": 24
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 6,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-token-forced-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Remove Design\"",
+      "name": "Remove Design",
+      "role": "button",
+      "rect": {
+       "x": 65.359375,
+       "y": 20,
+       "w": 16,
+       "h": 16
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "button \"Remove Design\"",
+       "relation": "focused",
+       "rect": {
+        "x": 65.359375,
+        "y": 20,
+        "w": 16,
+        "h": 16
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgba(5, 0, 73, 0.8)",
+       "outlineStyle": "solid",
+       "radius": 9999,
+       "contrast": {
+        "outlineColor": "#050049",
+        "perSide": {
+         "left": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "right": {
+          "ring": "#ffffff",
+          "outside": "#ffffff",
+          "ringShows": false,
+          "sampled": 1,
+          "computed": 19.04
+         },
+         "top": {
+          "ring": "#37336d",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 11.31,
+          "computed": 19.04
+         },
+         "bottom": {
+          "ring": "#ffffff",
+          "outside": "#ffffff",
+          "ringShows": false,
+          "sampled": 1,
+          "computed": 19.04
+         }
+        },
+        "minSampled": 1,
+        "minComputed": 19.04,
+        "sidesShowing": 2,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "span overflow=hidden/hidden contain=none clip-path=none radius=6px",
+       "holdsRing": false,
+       "pointsOutside": 7
+      }
+     ],
+     "frame": "main-token-forced-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Remove Design\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Remove Design\"",
+     "name": "Remove Design",
+     "role": "button",
+     "rect": {
+      "x": 65.359375,
+      "y": 20,
+      "w": 16,
+      "h": 16
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-token-forced-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 172.703125,
+    "height": 64
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "thumbnail",
+   "story": "core-thumbnail--clickable-with-remove",
+   "scheme": "light",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Open Dark landscape\"",
+      "name": "Open Dark landscape",
+      "role": "button",
+      "rect": {
+       "x": 16,
+       "y": 16,
+       "w": 64,
+       "h": 64
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-thumbnail-light-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Remove Dark landscape\"",
+      "name": "Remove Dark landscape",
+      "role": "button",
+      "rect": {
+       "x": 56,
+       "y": 20,
+       "w": 20,
+       "h": 20
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "right": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         }
+        },
+        "minSampled": 17.22,
+        "minComputed": 17.22,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      },
+      {
+       "description": "button \"Remove Dark landscape\"",
+       "relation": "focused",
+       "rect": {
+        "x": 56,
+        "y": 20,
+        "w": 20,
+        "h": 20
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(27, 27, 27)",
+       "outlineStyle": "solid",
+       "radius": 6,
+       "contrast": {
+        "outlineColor": "#1b1b1b",
+        "perSide": {
+         "left": {
+          "ring": "#1b1b1b",
+          "outside": "#26252a",
+          "ringShows": true,
+          "sampled": 1.13,
+          "computed": 1.13
+         },
+         "right": {
+          "ring": "#ffffff",
+          "outside": "#1b1b1b",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 1
+         },
+         "top": {
+          "ring": "#1b1b1b",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 17.22,
+          "computed": 17.22
+         },
+         "bottom": {
+          "ring": "#1b1b1b",
+          "outside": "#4a4036",
+          "ringShows": true,
+          "sampled": 1.7,
+          "computed": 1.7
+         }
+        },
+        "minSampled": 1.13,
+        "minComputed": 1,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+       "holdsRing": false,
+       "pointsOutside": 3
+      }
+     ],
+     "frame": "main-thumbnail-light-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Remove Dark landscape\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Remove Dark landscape\"",
+     "name": "Remove Dark landscape",
+     "role": "button",
+     "rect": {
+      "x": 56,
+      "y": 20,
+      "w": 20,
+      "h": 20
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-thumbnail-light-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 104,
+    "height": 104
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "thumbnail",
+   "story": "core-thumbnail--clickable-with-remove",
+   "scheme": "dark",
+   "env": {
+    "forcedColors": false,
+    "colorScheme": "dark",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Open Dark landscape\"",
+      "name": "Open Dark landscape",
+      "role": "button",
+      "rect": {
+       "x": 16,
+       "y": 16,
+       "w": 64,
+       "h": 64
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-thumbnail-dark-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Remove Dark landscape\"",
+      "name": "Remove Dark landscape",
+      "role": "button",
+      "rect": {
+       "x": 56,
+       "y": 20,
+       "w": 20,
+       "h": 20
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "right": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         }
+        },
+        "minSampled": 13.4,
+        "minComputed": 13.4,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      },
+      {
+       "description": "button \"Remove Dark landscape\"",
+       "relation": "focused",
+       "rect": {
+        "x": 56,
+        "y": 20,
+        "w": 20,
+        "h": 20
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(241, 241, 241)",
+       "outlineStyle": "solid",
+       "radius": 6,
+       "contrast": {
+        "outlineColor": "#f1f1f1",
+        "perSide": {
+         "left": {
+          "ring": "#f1f1f1",
+          "outside": "#26252a",
+          "ringShows": true,
+          "sampled": 13.47,
+          "computed": 13.47
+         },
+         "right": {
+          "ring": "#262626",
+          "outside": "#f1f1f1",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 1
+         },
+         "top": {
+          "ring": "#f1f1f1",
+          "outside": "#262626",
+          "ringShows": true,
+          "sampled": 13.4,
+          "computed": 13.4
+         },
+         "bottom": {
+          "ring": "#f1f1f1",
+          "outside": "#4a4036",
+          "ringShows": true,
+          "sampled": 8.95,
+          "computed": 8.95
+         }
+        },
+        "minSampled": 8.95,
+        "minComputed": 1,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+       "holdsRing": false,
+       "pointsOutside": 3
+      }
+     ],
+     "frame": "main-thumbnail-dark-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Remove Dark landscape\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Remove Dark landscape\"",
+     "name": "Remove Dark landscape",
+     "role": "button",
+     "rect": {
+      "x": 56,
+      "y": 20,
+      "w": 20,
+      "h": 20
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-thumbnail-dark-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 104,
+    "height": 104
+   }
+  },
+  {
+   "side": "main",
+   "commit": "77a11ae0d2305c3f261190161248853f5741b52b",
+   "target": "thumbnail",
+   "story": "core-thumbnail--clickable-with-remove",
+   "scheme": "forced",
+   "env": {
+    "forcedColors": true,
+    "colorScheme": "light",
+    "version": "rendered"
+   },
+   "stops": [
+    {
+     "stop": 1,
+     "focused": {
+      "description": "button[type=button] \"Open Dark landscape\"",
+      "name": "Open Dark landscape",
+      "role": "button",
+      "rect": {
+       "x": 16,
+       "y": 16,
+       "w": 64,
+       "h": 64
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": null,
+     "frame": "main-thumbnail-forced-a-own-control.png"
+    },
+    {
+     "stop": 2,
+     "focused": {
+      "description": "button[type=button] \"Remove Dark landscape\"",
+      "name": "Remove Dark landscape",
+      "role": "button",
+      "rect": {
+       "x": 56,
+       "y": 20,
+       "w": 20,
+       "h": 20
+      },
+      "visuallyHidden": false
+     },
+     "rings": [
+      {
+       "description": "div \"\"",
+       "relation": "ancestor of focused",
+       "rect": {
+        "x": 16,
+        "y": 16,
+        "w": 64,
+        "h": 64
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgb(0, 0, 0)",
+       "outlineStyle": "solid",
+       "radius": 10,
+       "contrast": {
+        "outlineColor": "#000000",
+        "perSide": {
+         "left": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "right": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "top": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         },
+         "bottom": {
+          "ring": "#000000",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 21
+         }
+        },
+        "minSampled": 21,
+        "minComputed": 21,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      },
+      {
+       "description": "button \"Remove Dark landscape\"",
+       "relation": "focused",
+       "rect": {
+        "x": 56,
+        "y": 20,
+        "w": 20,
+        "h": 20
+       },
+       "outlineWidth": 2,
+       "outlineOffset": 3,
+       "outlineColor": "rgba(5, 0, 73, 0.8)",
+       "outlineStyle": "solid",
+       "radius": 6,
+       "contrast": {
+        "outlineColor": "#050049",
+        "perSide": {
+         "left": {
+          "ring": "#0b0742",
+          "outside": "#26252a",
+          "ringShows": true,
+          "sampled": 1.23,
+          "computed": 1.25
+         },
+         "right": {
+          "ring": "#ffffff",
+          "outside": "#000000",
+          "ringShows": true,
+          "sampled": 21,
+          "computed": 1.1
+         },
+         "top": {
+          "ring": "#0b0742",
+          "outside": "#ffffff",
+          "ringShows": true,
+          "sampled": 18.7,
+          "computed": 19.04
+         },
+         "bottom": {
+          "ring": "#130d44",
+          "outside": "#4a4036",
+          "ringShows": true,
+          "sampled": 1.78,
+          "computed": 1.88
+         }
+        },
+        "minSampled": 1.23,
+        "minComputed": 1.1,
+        "sidesShowing": 4,
+        "sidesMeasured": 4
+       }
+      }
+     ],
+     "clip": [
+      {
+       "ancestor": "div overflow=hidden/hidden contain=none clip-path=none radius=10px",
+       "holdsRing": false,
+       "pointsOutside": 3
+      }
+     ],
+     "frame": "main-thumbnail-forced-b-nested-control.png"
+    }
+   ],
+   "click": {
+    "target": "button[type=button] \"Remove Dark landscape\"",
+    "found": true,
+    "urlChanged": false,
+    "focused": {
+     "description": "button[type=button] \"Remove Dark landscape\"",
+     "name": "Remove Dark landscape",
+     "role": "button",
+     "rect": {
+      "x": 56,
+      "y": 20,
+      "w": 20,
+      "h": 20
+     },
+     "visuallyHidden": false
+    },
+    "rings": [],
+    "frame": "main-thumbnail-forced-c-pointer-click.png"
+   },
+   "crop": {
+    "x": 0,
+    "y": 0,
+    "width": 104,
+    "height": 104
+   }
+  }
+ ]
+}
