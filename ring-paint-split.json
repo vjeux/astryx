@@ -1,0 +1,74 @@
+[
+  {
+    "scheme": "light",
+    "size": "1280",
+    "control": "Help & docs",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.8,
+    "cornerPositions": 2816
+  },
+  {
+    "scheme": "light",
+    "size": "1280",
+    "control": "Settings",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.8,
+    "cornerPositions": 2816
+  },
+  {
+    "scheme": "light",
+    "size": "390",
+    "control": "Help & docs",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.7,
+    "cornerPositions": 2816
+  },
+  {
+    "scheme": "light",
+    "size": "390",
+    "control": "Settings",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.7,
+    "cornerPositions": 2816
+  },
+  {
+    "scheme": "dark",
+    "size": "1280",
+    "control": "Help & docs",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.6,
+    "cornerPositions": 2816
+  },
+  {
+    "scheme": "dark",
+    "size": "1280",
+    "control": "Settings",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.6,
+    "cornerPositions": 2816
+  },
+  {
+    "scheme": "dark",
+    "size": "390",
+    "control": "Help & docs",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.5,
+    "cornerPositions": 2816
+  },
+  {
+    "scheme": "dark",
+    "size": "390",
+    "control": "Settings",
+    "straightRunsPaintedPct": 100,
+    "straightPositions": 15136,
+    "cornerArcsPaintedPct": 91.5,
+    "cornerPositions": 2816
+  }
+]

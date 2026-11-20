@@ -1,0 +1,1692 @@
+{
+  "route": "/templates/SideNavShowcase/",
+  "chromium": "149.0.7827.55",
+  "stamps": {
+    "head": "4d0322c8da8593157765454a9b05058c598a076b",
+    "main": "1f5f1cb7799641f1efac72c75e788cab58479957"
+  },
+  "blocked": [],
+  "errors": [],
+  "records": [
+    {
+      "build": "head",
+      "scheme": "light",
+      "size": "1280",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents\n  - group \"Support\":\n    - text: Support\n    - link \"Help & docs\":\n      - /url: /help\n    - link \"Settings\":\n      - /url: /settings",
+      "footer": {
+        "navBackground": "rgb(241, 241, 241)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": true,
+            "tag": "a",
+            "href": "/help",
+            "visibleText": "Help & docs",
+            "ariaLabel": null,
+            "box": {
+              "x": 518,
+              "y": 490,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 526,
+                "y": 498,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(106, 106, 106)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(241, 241, 241)"
+            },
+            "iconSampled": {
+              "ink": [
+                106,
+                106,
+                106
+              ],
+              "background": [
+                241,
+                241,
+                241
+              ],
+              "ratio": 4.79
+            },
+            "iconComputed": {
+              "color": "rgb(106, 106, 106)",
+              "behind": "rgb(241, 241, 241)",
+              "ratio": 4.79
+            }
+          },
+          {
+            "label": "Settings",
+            "present": true,
+            "tag": "a",
+            "href": "/settings",
+            "visibleText": "Settings",
+            "ariaLabel": null,
+            "box": {
+              "x": 518,
+              "y": 524,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 526,
+                "y": 532,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(106, 106, 106)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(241, 241, 241)"
+            },
+            "iconSampled": {
+              "ink": [
+                106,
+                106,
+                106
+              ],
+              "background": [
+                241,
+                241,
+                241
+              ],
+              "ratio": 4.79
+            },
+            "iconComputed": {
+              "color": "rgb(106, 106, 106)",
+              "behind": "rgb(241, 241, 241)",
+              "ratio": 4.79
+            }
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280
+      },
+      "focus": [
+        {
+          "key": "help",
+          "label": "Help & docs",
+          "stops": [
+            "My App",
+            "Dashboard",
+            "Projects",
+            "Analytics",
+            "All Documents",
+            "Help & docs"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Help & docs",
+            "focusVisible": true,
+            "box": {
+              "x": 518,
+              "y": 490,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(27, 27, 27)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 510,
+                  "y": 232,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 156,
+                  "y": 220,
+                  "w": 968,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 1280,
+              "h": 800
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(27, 27, 27)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.3,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 95.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 95,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 505,
+            "y": 477,
+            "width": 270,
+            "height": 58
+          }
+        },
+        {
+          "key": "settings",
+          "label": "Settings",
+          "stops": [
+            "Settings"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Settings",
+            "focusVisible": true,
+            "box": {
+              "x": 518,
+              "y": 524,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(27, 27, 27)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 510,
+                  "y": 232,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 156,
+                  "y": 220,
+                  "w": 968,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 1280,
+              "h": 800
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(27, 27, 27)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.3,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 95.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 95,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 505,
+            "y": 511,
+            "width": 270,
+            "height": 58
+          }
+        }
+      ]
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "size": "1280",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents",
+      "footer": {
+        "navBackground": "rgb(241, 241, 241)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": false
+          },
+          {
+            "label": "Settings",
+            "present": false
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280
+      },
+      "focus": []
+    },
+    {
+      "build": "head",
+      "scheme": "light",
+      "size": "390",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents\n  - group \"Support\":\n    - text: Support\n    - link \"Help & docs\":\n      - /url: /help\n    - link \"Settings\":\n      - /url: /settings",
+      "footer": {
+        "navBackground": "rgb(241, 241, 241)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": true,
+            "tag": "a",
+            "href": "/help",
+            "visibleText": "Help & docs",
+            "ariaLabel": null,
+            "box": {
+              "x": 73,
+              "y": 512,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 81,
+                "y": 520,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(106, 106, 106)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(241, 241, 241)"
+            },
+            "iconSampled": {
+              "ink": [
+                106,
+                106,
+                106
+              ],
+              "background": [
+                241,
+                241,
+                241
+              ],
+              "ratio": 4.79
+            },
+            "iconComputed": {
+              "color": "rgb(106, 106, 106)",
+              "behind": "rgb(241, 241, 241)",
+              "ratio": 4.79
+            }
+          },
+          {
+            "label": "Settings",
+            "present": true,
+            "tag": "a",
+            "href": "/settings",
+            "visibleText": "Settings",
+            "ariaLabel": null,
+            "box": {
+              "x": 73,
+              "y": 546,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 81,
+                "y": 554,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(106, 106, 106)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(241, 241, 241)"
+            },
+            "iconSampled": {
+              "ink": [
+                106,
+                106,
+                106
+              ],
+              "background": [
+                241,
+                241,
+                241
+              ],
+              "ratio": 4.79
+            },
+            "iconComputed": {
+              "color": "rgb(106, 106, 106)",
+              "behind": "rgb(241, 241, 241)",
+              "ratio": 4.79
+            }
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390
+      },
+      "focus": [
+        {
+          "key": "help",
+          "label": "Help & docs",
+          "stops": [
+            "My App",
+            "Dashboard",
+            "Projects",
+            "Analytics",
+            "All Documents",
+            "Help & docs"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Help & docs",
+            "focusVisible": true,
+            "box": {
+              "x": 73,
+              "y": 512,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(27, 27, 27)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 65,
+                  "y": 254,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 0,
+                  "y": 242,
+                  "w": 390,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 390,
+              "h": 844
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(27, 27, 27)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.9,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.3,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 95,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 60,
+            "y": 499,
+            "width": 270,
+            "height": 58
+          }
+        },
+        {
+          "key": "settings",
+          "label": "Settings",
+          "stops": [
+            "Settings"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Settings",
+            "focusVisible": true,
+            "box": {
+              "x": 73,
+              "y": 546,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(27, 27, 27)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 65,
+                  "y": 254,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 0,
+                  "y": 242,
+                  "w": 390,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 390,
+              "h": 844
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(27, 27, 27)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.7,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.3,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.9,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 60,
+            "y": 533,
+            "width": 270,
+            "height": 58
+          }
+        }
+      ]
+    },
+    {
+      "build": "main",
+      "scheme": "light",
+      "size": "390",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents",
+      "footer": {
+        "navBackground": "rgb(241, 241, 241)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": false
+          },
+          {
+            "label": "Settings",
+            "present": false
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390
+      },
+      "focus": []
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "size": "1280",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents\n  - group \"Support\":\n    - text: Support\n    - link \"Help & docs\":\n      - /url: /help\n    - link \"Settings\":\n      - /url: /settings",
+      "footer": {
+        "navBackground": "rgb(27, 27, 27)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": true,
+            "tag": "a",
+            "href": "/help",
+            "visibleText": "Help & docs",
+            "ariaLabel": null,
+            "box": {
+              "x": 518,
+              "y": 490,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 526,
+                "y": 498,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(158, 158, 158)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(27, 27, 27)"
+            },
+            "iconSampled": {
+              "ink": [
+                158,
+                158,
+                158
+              ],
+              "background": [
+                27,
+                27,
+                27
+              ],
+              "ratio": 6.43
+            },
+            "iconComputed": {
+              "color": "rgb(158, 158, 158)",
+              "behind": "rgb(27, 27, 27)",
+              "ratio": 6.43
+            }
+          },
+          {
+            "label": "Settings",
+            "present": true,
+            "tag": "a",
+            "href": "/settings",
+            "visibleText": "Settings",
+            "ariaLabel": null,
+            "box": {
+              "x": 518,
+              "y": 524,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 526,
+                "y": 532,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(158, 158, 158)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(27, 27, 27)"
+            },
+            "iconSampled": {
+              "ink": [
+                158,
+                158,
+                158
+              ],
+              "background": [
+                27,
+                27,
+                27
+              ],
+              "ratio": 6.43
+            },
+            "iconComputed": {
+              "color": "rgb(158, 158, 158)",
+              "behind": "rgb(27, 27, 27)",
+              "ratio": 6.43
+            }
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280
+      },
+      "focus": [
+        {
+          "key": "help",
+          "label": "Help & docs",
+          "stops": [
+            "My App",
+            "Dashboard",
+            "Projects",
+            "Analytics",
+            "All Documents",
+            "Help & docs"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Help & docs",
+            "focusVisible": true,
+            "box": {
+              "x": 518,
+              "y": 490,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(241, 241, 241)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 510,
+                  "y": 232,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 156,
+                  "y": 220,
+                  "w": 968,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 1280,
+              "h": 800
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(241, 241, 241)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 95,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.8,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 505,
+            "y": 477,
+            "width": 270,
+            "height": 58
+          }
+        },
+        {
+          "key": "settings",
+          "label": "Settings",
+          "stops": [
+            "Settings"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Settings",
+            "focusVisible": true,
+            "box": {
+              "x": 518,
+              "y": 524,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(241, 241, 241)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 510,
+                  "y": 232,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 156,
+                  "y": 220,
+                  "w": 968,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 1280,
+              "h": 800
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(241, 241, 241)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 95,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.8,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 505,
+            "y": 511,
+            "width": 270,
+            "height": 58
+          }
+        }
+      ]
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "size": "1280",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents",
+      "footer": {
+        "navBackground": "rgb(27, 27, 27)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": false
+          },
+          {
+            "label": "Settings",
+            "present": false
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280
+      },
+      "focus": []
+    },
+    {
+      "build": "head",
+      "scheme": "dark",
+      "size": "390",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents\n  - group \"Support\":\n    - text: Support\n    - link \"Help & docs\":\n      - /url: /help\n    - link \"Settings\":\n      - /url: /settings",
+      "footer": {
+        "navBackground": "rgb(27, 27, 27)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": true,
+            "tag": "a",
+            "href": "/help",
+            "visibleText": "Help & docs",
+            "ariaLabel": null,
+            "box": {
+              "x": 73,
+              "y": 512,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 81,
+                "y": 520,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(158, 158, 158)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(27, 27, 27)"
+            },
+            "iconSampled": {
+              "ink": [
+                158,
+                158,
+                158
+              ],
+              "background": [
+                27,
+                27,
+                27
+              ],
+              "ratio": 6.43
+            },
+            "iconComputed": {
+              "color": "rgb(158, 158, 158)",
+              "behind": "rgb(27, 27, 27)",
+              "ratio": 6.43
+            }
+          },
+          {
+            "label": "Settings",
+            "present": true,
+            "tag": "a",
+            "href": "/settings",
+            "visibleText": "Settings",
+            "ariaLabel": null,
+            "box": {
+              "x": 73,
+              "y": 546,
+              "w": 244,
+              "h": 32
+            },
+            "icon": {
+              "box": {
+                "x": 81,
+                "y": 554,
+                "w": 16,
+                "h": 16
+              },
+              "ariaHidden": "true",
+              "color": "rgb(158, 158, 158)",
+              "stroke": "currentColor",
+              "fill": "none",
+              "behind": "rgb(27, 27, 27)"
+            },
+            "iconSampled": {
+              "ink": [
+                158,
+                158,
+                158
+              ],
+              "background": [
+                27,
+                27,
+                27
+              ],
+              "ratio": 6.43
+            },
+            "iconComputed": {
+              "color": "rgb(158, 158, 158)",
+              "behind": "rgb(27, 27, 27)",
+              "ratio": 6.43
+            }
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390
+      },
+      "focus": [
+        {
+          "key": "help",
+          "label": "Help & docs",
+          "stops": [
+            "My App",
+            "Dashboard",
+            "Projects",
+            "Analytics",
+            "All Documents",
+            "Help & docs"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Help & docs",
+            "focusVisible": true,
+            "box": {
+              "x": 73,
+              "y": 512,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(241, 241, 241)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 65,
+                  "y": 254,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 0,
+                  "y": 242,
+                  "w": 390,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 390,
+              "h": 844
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(241, 241, 241)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.8,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.3,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.8,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 60,
+            "y": 499,
+            "width": 270,
+            "height": 58
+          }
+        },
+        {
+          "key": "settings",
+          "label": "Settings",
+          "stops": [
+            "Settings"
+          ],
+          "reached": true,
+          "geometry": {
+            "tag": "a",
+            "text": "Settings",
+            "focusVisible": true,
+            "box": {
+              "x": 73,
+              "y": 546,
+              "w": 244,
+              "h": 32
+            },
+            "outline": {
+              "style": "solid",
+              "width": 2,
+              "offset": 3,
+              "color": "rgb(241, 241, 241)"
+            },
+            "boxShadow": "none",
+            "radius": 10,
+            "clips": [
+              {
+                "tag": "nav",
+                "cls": "astryx-side-nav x78zum5",
+                "overflow": "hidden hidden",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 65,
+                  "y": 254,
+                  "w": 260,
+                  "h": 336
+                },
+                "radii": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "tag": "div",
+                "cls": "astryx-card x2kkz0m",
+                "overflow": "clip clip",
+                "contain": "none",
+                "clipPath": "none",
+                "clipX": true,
+                "clipY": true,
+                "box": {
+                  "x": 0,
+                  "y": 242,
+                  "w": 390,
+                  "h": 360
+                },
+                "radii": [
+                  12,
+                  12,
+                  12,
+                  12
+                ]
+              }
+            ],
+            "viewport": {
+              "w": 390,
+              "h": 844
+            }
+          },
+          "ring": {
+            "ringColor": "rgb(241, 241, 241)",
+            "whole": {
+              "points": 2248,
+              "fullPct": 100,
+              "partPct": 0,
+              "nonePct": 0,
+              "meanWidth": 2,
+              "paintedPct": 98.7
+            },
+            "sides": {
+              "top": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.2,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "right": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.6,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "bottom": {
+                "points": 986,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 99.3,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              },
+              "left": {
+                "points": 138,
+                "fullPct": 100,
+                "partPct": 0,
+                "nonePct": 0,
+                "meanWidth": 2,
+                "paintedPct": 94.7,
+                "insideMin": 15.25,
+                "insideMedian": 15.25,
+                "outsideMin": 15.25,
+                "outsideMedian": 15.25
+              }
+            }
+          },
+          "crop": {
+            "x": 60,
+            "y": 533,
+            "width": 270,
+            "height": 58
+          }
+        }
+      ]
+    },
+    {
+      "build": "main",
+      "scheme": "dark",
+      "size": "390",
+      "aria": "- navigation \"Side navigation\":\n  - link \"My App\":\n    - /url: /\n  - group \"Main\":\n    - text: Main\n    - link \"Dashboard\":\n      - /url: /dashboard\n    - link \"Projects\":\n      - /url: /projects\n    - link \"Analytics\":\n      - /url: /analytics\n  - group \"Documents\":\n    - text: Documents\n    - link \"All Documents\":\n      - /url: /documents",
+      "footer": {
+        "navBackground": "rgb(27, 27, 27)",
+        "items": [
+          {
+            "label": "Help & docs",
+            "present": false
+          },
+          {
+            "label": "Settings",
+            "present": false
+          }
+        ]
+      },
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390
+      },
+      "focus": []
+    }
+  ]
+}
