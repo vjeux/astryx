@@ -1,0 +1,51 @@
+{
+ "label": "test",
+ "device": "physical iPhone 14, iOS 26.2, Mobile Safari 26.2 (390x844 pt at 3x)",
+ "story": "core-tablerowexpansion--gliding-rows, row 1 expanded (its expand toggle clicked in the page, 2.8 s settle), Customer column pinned as in the story",
+ "builds": {
+  "main": "67b821f3 (Production)",
+  "head": "c9d23901 (preview)"
+ },
+ "versionCheck": "each build version.json read on the phone before the stills",
+ "variants": "dividers rows (story default) and dividers grid (story arg), each in light and dark (Storybook colorMode global)",
+ "crop": "each still is the phone screenshot cropped to the page area: 1170x2049 px from y 141 (no status bar, no browser bar, no address)",
+ "method": "ImageMagick compare -metric AE -fuzz 0% main head diff.png: the count of pixels whose colour differs at all; the diff image marks differing pixels in red over a faded main",
+ "pairs": [
+  {
+   "dividers": "rows",
+   "colorMode": "light",
+   "main": "13359-iphone-rows-light-main-67b821f3.png",
+   "head": "13359-iphone-rows-light-head-c9d23901.png",
+   "diff": "13359-iphone-rows-light-diff.png",
+   "differingPixels": 0,
+   "ofPixels": 2397330
+  },
+  {
+   "dividers": "rows",
+   "colorMode": "dark",
+   "main": "13359-iphone-rows-dark-main-67b821f3.png",
+   "head": "13359-iphone-rows-dark-head-c9d23901.png",
+   "diff": "13359-iphone-rows-dark-diff.png",
+   "differingPixels": 0,
+   "ofPixels": 2397330
+  },
+  {
+   "dividers": "grid",
+   "colorMode": "light",
+   "main": "13359-iphone-grid-light-main-67b821f3.png",
+   "head": "13359-iphone-grid-light-head-c9d23901.png",
+   "diff": "13359-iphone-grid-light-diff.png",
+   "differingPixels": 0,
+   "ofPixels": 2397330
+  },
+  {
+   "dividers": "grid",
+   "colorMode": "dark",
+   "main": "13359-iphone-grid-dark-main-67b821f3.png",
+   "head": "13359-iphone-grid-dark-head-c9d23901.png",
+   "diff": "13359-iphone-grid-dark-diff.png",
+   "differingPixels": 0,
+   "ofPixels": 2397330
+  }
+ ]
+}
