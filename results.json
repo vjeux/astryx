@@ -1,0 +1,1165 @@
+{
+ "chromium": "149.0.7827.55",
+ "dpr": 2,
+ "page": "/sandbox/templates/useTruncationHookUsage/",
+ "builds": {
+  "main": {
+   "commit": "395ef28a89ebbddb3e84250eaccc7921201d2548",
+   "environment": "production"
+  },
+  "head": {
+   "commit": "3f3c8d8f3f68289ad11a5f76cc861abfdc9e1c3b",
+   "environment": "preview"
+  }
+ },
+ "runs": [
+  {
+   "build": "main",
+   "mode": "light",
+   "shownMode": {
+    "attr": null,
+    "scheme": "light",
+    "bg": "rgba(0, 0, 0, 0)"
+   },
+   "console": [],
+   "rest": {
+    "cut": {
+     "cut": true,
+     "lines": 1,
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_4qmj_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ],
+     "focusable": [
+      {
+       "tag": "span",
+       "tabindex": "0"
+      }
+     ],
+     "box": {
+      "x": 552.328125,
+      "y": 409.671875,
+      "w": 120,
+      "h": 20
+     },
+     "holder": "span"
+    },
+    "clamped": {
+     "cut": true,
+     "lines": 2,
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5amj_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ],
+     "focusable": [
+      {
+       "tag": "span",
+       "tabindex": "0"
+      }
+     ],
+     "box": {
+      "x": 552.328125,
+      "y": 446.671875,
+      "w": 120,
+      "h": 40
+     },
+     "holder": "span"
+    },
+    "fits": {
+     "cut": false,
+     "lines": 0,
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5qmj_"
+       ],
+       "targets": [
+        "README.md"
+       ]
+      }
+     ],
+     "focusable": [],
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "holder": "template"
+    }
+   },
+   "hover": {
+    "cut": {
+     "tooltips": [
+      {
+       "text": "artifacts/release/build-20261103-120344/index.html",
+       "id": "_R_4qmj_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_4qmj_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ],
+     "mounted": 3,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_R_4qmj_"
+        ],
+        "targets": [
+         "artifacts/release/build-20261103-120344/index.html"
+        ]
+       }
+      ],
+      "mounted": 3
+     },
+     "frame": "main-light-hover-cut.png"
+    },
+    "clamped": {
+     "tooltips": [
+      {
+       "text": "reports/coverage/packages/core/src/components/Calendar/index.html",
+       "id": "_R_5amj_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5amj_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ],
+     "mounted": 3,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_R_5amj_"
+        ],
+        "targets": [
+         "reports/coverage/packages/core/src/components/Calendar/index.html"
+        ]
+       }
+      ],
+      "mounted": 3
+     },
+     "frame": "main-light-hover-clamped.png"
+    },
+    "fits": {
+     "tooltips": [],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5qmj_"
+       ],
+       "targets": [
+        "README.md"
+       ]
+      }
+     ],
+     "mounted": 3,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_R_5qmj_"
+        ],
+        "targets": [
+         "README.md"
+        ]
+       }
+      ],
+      "mounted": 3
+     },
+     "frame": "main-light-hover-fits.png"
+    }
+   },
+   "tabs": [
+    {
+     "tab": 1,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Show sidebar",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 2,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "UseTruncationHookUsage",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 3,
+     "focused": {
+      "tag": "button",
+      "role": "radio",
+      "tabindex": "0",
+      "label": "Preview",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 4,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Neutral",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 5,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Light mode",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 6,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Copy source",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 7,
+     "focused": {
+      "tag": "span",
+      "role": null,
+      "tabindex": "0",
+      "label": "artifacts/release/build-20261103-120344/index.html",
+      "inCell": "artifacts/release/build-20261103-120344/index.html",
+      "describedby": "_R_4qmj_"
+     },
+     "tooltips": [
+      {
+       "text": "artifacts/release/build-20261103-120344/index.html",
+       "id": "_R_4qmj_"
+      }
+     ],
+     "frame": "main-light-tab7.png",
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_4qmj_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ]
+    },
+    {
+     "tab": 8,
+     "focused": {
+      "tag": "span",
+      "role": null,
+      "tabindex": "0",
+      "label": "reports/coverage/packages/core/src/components/Calendar/index.html",
+      "inCell": "reports/coverage/packages/core/src/components/Calendar/index.html",
+      "describedby": "_R_5amj_"
+     },
+     "tooltips": [
+      {
+       "text": "reports/coverage/packages/core/src/components/Calendar/index.html",
+       "id": "_R_5amj_"
+      }
+     ],
+     "frame": "main-light-tab8.png",
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5amj_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ]
+    },
+    {
+     "tab": 9,
+     "focused": {
+      "tag": "body"
+     },
+     "tooltips": []
+    }
+   ],
+   "frames": [
+    "main-light-rest.png",
+    "main-light-hover-cut.png",
+    "main-light-hover-clamped.png",
+    "main-light-hover-fits.png",
+    "main-light-tab7.png",
+    "main-light-tab8.png"
+   ],
+   "mountedAtRest": 3,
+   "tabStart": {
+    "mounted": 3
+   }
+  },
+  {
+   "build": "main",
+   "mode": "dark",
+   "shownMode": {
+    "attr": null,
+    "scheme": "dark",
+    "bg": "rgba(0, 0, 0, 0)"
+   },
+   "console": [],
+   "rest": {
+    "cut": {
+     "cut": true,
+     "lines": 1,
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_4qmj_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ],
+     "focusable": [
+      {
+       "tag": "span",
+       "tabindex": "0"
+      }
+     ],
+     "box": {
+      "x": 552.328125,
+      "y": 409.671875,
+      "w": 120,
+      "h": 20
+     },
+     "holder": "span"
+    },
+    "clamped": {
+     "cut": true,
+     "lines": 2,
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5amj_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ],
+     "focusable": [
+      {
+       "tag": "span",
+       "tabindex": "0"
+      }
+     ],
+     "box": {
+      "x": 552.328125,
+      "y": 446.671875,
+      "w": 120,
+      "h": 40
+     },
+     "holder": "span"
+    },
+    "fits": {
+     "cut": false,
+     "lines": 0,
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5qmj_"
+       ],
+       "targets": [
+        "README.md"
+       ]
+      }
+     ],
+     "focusable": [],
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+     },
+     "holder": "template"
+    }
+   },
+   "hover": {
+    "cut": {
+     "tooltips": [
+      {
+       "text": "artifacts/release/build-20261103-120344/index.html",
+       "id": "_R_4qmj_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_4qmj_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ],
+     "mounted": 3,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_R_4qmj_"
+        ],
+        "targets": [
+         "artifacts/release/build-20261103-120344/index.html"
+        ]
+       }
+      ],
+      "mounted": 3
+     },
+     "frame": "main-dark-hover-cut.png"
+    },
+    "clamped": {
+     "tooltips": [
+      {
+       "text": "reports/coverage/packages/core/src/components/Calendar/index.html",
+       "id": "_R_5amj_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5amj_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ],
+     "mounted": 3,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_R_5amj_"
+        ],
+        "targets": [
+         "reports/coverage/packages/core/src/components/Calendar/index.html"
+        ]
+       }
+      ],
+      "mounted": 3
+     },
+     "frame": "main-dark-hover-clamped.png"
+    },
+    "fits": {
+     "tooltips": [],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5qmj_"
+       ],
+       "targets": [
+        "README.md"
+       ]
+      }
+     ],
+     "mounted": 3,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_R_5qmj_"
+        ],
+        "targets": [
+         "README.md"
+        ]
+       }
+      ],
+      "mounted": 3
+     },
+     "frame": "main-dark-hover-fits.png"
+    }
+   },
+   "tabs": [
+    {
+     "tab": 1,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Show sidebar",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 2,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "UseTruncationHookUsage",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 3,
+     "focused": {
+      "tag": "button",
+      "role": "radio",
+      "tabindex": "0",
+      "label": "Preview",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 4,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Neutral",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 5,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Dark mode",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 6,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Copy source",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 7,
+     "focused": {
+      "tag": "span",
+      "role": null,
+      "tabindex": "0",
+      "label": "artifacts/release/build-20261103-120344/index.html",
+      "inCell": "artifacts/release/build-20261103-120344/index.html",
+      "describedby": "_R_4qmj_"
+     },
+     "tooltips": [
+      {
+       "text": "artifacts/release/build-20261103-120344/index.html",
+       "id": "_R_4qmj_"
+      }
+     ],
+     "frame": "main-dark-tab7.png",
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_4qmj_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ]
+    },
+    {
+     "tab": 8,
+     "focused": {
+      "tag": "span",
+      "role": null,
+      "tabindex": "0",
+      "label": "reports/coverage/packages/core/src/components/Calendar/index.html",
+      "inCell": "reports/coverage/packages/core/src/components/Calendar/index.html",
+      "describedby": "_R_5amj_"
+     },
+     "tooltips": [
+      {
+       "text": "reports/coverage/packages/core/src/components/Calendar/index.html",
+       "id": "_R_5amj_"
+      }
+     ],
+     "frame": "main-dark-tab8.png",
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_R_5amj_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ]
+    },
+    {
+     "tab": 9,
+     "focused": {
+      "tag": "body"
+     },
+     "tooltips": []
+    }
+   ],
+   "frames": [
+    "main-dark-rest.png",
+    "main-dark-hover-cut.png",
+    "main-dark-hover-clamped.png",
+    "main-dark-hover-fits.png",
+    "main-dark-tab7.png",
+    "main-dark-tab8.png"
+   ],
+   "mountedAtRest": 3,
+   "tabStart": {
+    "mounted": 3
+   }
+  },
+  {
+   "build": "head",
+   "mode": "light",
+   "shownMode": {
+    "attr": null,
+    "scheme": "light",
+    "bg": "rgba(0, 0, 0, 0)"
+   },
+   "console": [],
+   "rest": {
+    "cut": {
+     "cut": true,
+     "lines": 1,
+     "described": [],
+     "focusable": [],
+     "box": {
+      "x": 552.328125,
+      "y": 409.671875,
+      "w": 120,
+      "h": 20
+     },
+     "holder": "span"
+    },
+    "clamped": {
+     "cut": true,
+     "lines": 2,
+     "described": [],
+     "focusable": [],
+     "box": {
+      "x": 552.328125,
+      "y": 446.671875,
+      "w": 120,
+      "h": 40
+     },
+     "holder": "span"
+    },
+    "fits": {
+     "cut": false,
+     "lines": 1,
+     "described": [],
+     "focusable": [],
+     "box": {
+      "x": 552.328125,
+      "y": 503.671875,
+      "w": 120,
+      "h": 20
+     },
+     "holder": "span"
+    }
+   },
+   "hover": {
+    "cut": {
+     "tooltips": [
+      {
+       "text": "artifacts/release/build-20261103-120344/index.html",
+       "id": "_r_c_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_r_c_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ],
+     "mounted": 1,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_r_c_"
+        ],
+        "targets": [
+         "artifacts/release/build-20261103-120344/index.html"
+        ]
+       }
+      ],
+      "mounted": 1
+     },
+     "frame": "head-light-hover-cut.png"
+    },
+    "clamped": {
+     "tooltips": [
+      {
+       "text": "reports/coverage/packages/core/src/components/Calendar/index.html",
+       "id": "_r_d_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_r_d_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ],
+     "mounted": 2,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_r_d_"
+        ],
+        "targets": [
+         "reports/coverage/packages/core/src/components/Calendar/index.html"
+        ]
+       }
+      ],
+      "mounted": 2
+     },
+     "frame": "head-light-hover-clamped.png"
+    },
+    "fits": {
+     "tooltips": [],
+     "described": [],
+     "mounted": 2,
+     "after": {
+      "tooltips": [],
+      "described": [],
+      "mounted": 2
+     },
+     "frame": "head-light-hover-fits.png"
+    }
+   },
+   "tabs": [
+    {
+     "tab": 1,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Show sidebar",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 2,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "UseTruncationHookUsage",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 3,
+     "focused": {
+      "tag": "button",
+      "role": "radio",
+      "tabindex": "0",
+      "label": "Preview",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 4,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Neutral",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 5,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Light mode",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 6,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Copy source",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 7,
+     "focused": {
+      "tag": "body"
+     },
+     "tooltips": []
+    }
+   ],
+   "frames": [
+    "head-light-rest.png",
+    "head-light-hover-cut.png",
+    "head-light-hover-clamped.png",
+    "head-light-hover-fits.png"
+   ],
+   "mountedAtRest": 0,
+   "tabStart": {
+    "mounted": 0
+   }
+  },
+  {
+   "build": "head",
+   "mode": "dark",
+   "shownMode": {
+    "attr": null,
+    "scheme": "dark",
+    "bg": "rgba(0, 0, 0, 0)"
+   },
+   "console": [],
+   "rest": {
+    "cut": {
+     "cut": true,
+     "lines": 1,
+     "described": [],
+     "focusable": [],
+     "box": {
+      "x": 552.328125,
+      "y": 409.671875,
+      "w": 120,
+      "h": 20
+     },
+     "holder": "span"
+    },
+    "clamped": {
+     "cut": true,
+     "lines": 2,
+     "described": [],
+     "focusable": [],
+     "box": {
+      "x": 552.328125,
+      "y": 446.671875,
+      "w": 120,
+      "h": 40
+     },
+     "holder": "span"
+    },
+    "fits": {
+     "cut": false,
+     "lines": 1,
+     "described": [],
+     "focusable": [],
+     "box": {
+      "x": 552.328125,
+      "y": 503.671875,
+      "w": 120,
+      "h": 20
+     },
+     "holder": "span"
+    }
+   },
+   "hover": {
+    "cut": {
+     "tooltips": [
+      {
+       "text": "artifacts/release/build-20261103-120344/index.html",
+       "id": "_r_c_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_r_c_"
+       ],
+       "targets": [
+        "artifacts/release/build-20261103-120344/index.html"
+       ]
+      }
+     ],
+     "mounted": 1,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_r_c_"
+        ],
+        "targets": [
+         "artifacts/release/build-20261103-120344/index.html"
+        ]
+       }
+      ],
+      "mounted": 1
+     },
+     "frame": "head-dark-hover-cut.png"
+    },
+    "clamped": {
+     "tooltips": [
+      {
+       "text": "reports/coverage/packages/core/src/components/Calendar/index.html",
+       "id": "_r_d_"
+      }
+     ],
+     "described": [
+      {
+       "on": "span",
+       "ids": [
+        "_r_d_"
+       ],
+       "targets": [
+        "reports/coverage/packages/core/src/components/Calendar/index.html"
+       ]
+      }
+     ],
+     "mounted": 2,
+     "after": {
+      "tooltips": [],
+      "described": [
+       {
+        "on": "span",
+        "ids": [
+         "_r_d_"
+        ],
+        "targets": [
+         "reports/coverage/packages/core/src/components/Calendar/index.html"
+        ]
+       }
+      ],
+      "mounted": 2
+     },
+     "frame": "head-dark-hover-clamped.png"
+    },
+    "fits": {
+     "tooltips": [],
+     "described": [],
+     "mounted": 2,
+     "after": {
+      "tooltips": [],
+      "described": [],
+      "mounted": 2
+     },
+     "frame": "head-dark-hover-fits.png"
+    }
+   },
+   "tabs": [
+    {
+     "tab": 1,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Show sidebar",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 2,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "UseTruncationHookUsage",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 3,
+     "focused": {
+      "tag": "button",
+      "role": "radio",
+      "tabindex": "0",
+      "label": "Preview",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 4,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Neutral",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 5,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Dark mode",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 6,
+     "focused": {
+      "tag": "button",
+      "role": null,
+      "tabindex": null,
+      "label": "Copy source",
+      "inCell": null,
+      "describedby": null
+     },
+     "tooltips": []
+    },
+    {
+     "tab": 7,
+     "focused": {
+      "tag": "body"
+     },
+     "tooltips": []
+    }
+   ],
+   "frames": [
+    "head-dark-rest.png",
+    "head-dark-hover-cut.png",
+    "head-dark-hover-clamped.png",
+    "head-dark-hover-fits.png"
+   ],
+   "mountedAtRest": 0,
+   "tabStart": {
+    "mounted": 0
+   }
+  }
+ ]
+}
