@@ -1,0 +1,5818 @@
+{
+ "question": "#13192 at 1a2ff3a2 against main 7ee32e5f at 200% text: do nested SideNav rows with long labels and badges stay inside the nav, end in an ellipsis, and keep a full focus ring? Are the existing stories unchanged?",
+ "builds": {
+  "head": {
+   "commit": "1a2ff3a284e66db3c57402a189fe4a1451cc740d",
+   "environment": "preview"
+  },
+  "main": {
+   "commit": "7ee32e5f847d024d5075cc570e5c80c8dd7e4d88",
+   "environment": "local",
+   "note": "local Storybook build plus one scratch story (scratch-story.tsx), in neither pull request"
+  },
+  "headLocal": {
+   "commit": "1a2ff3a284e66db3c57402a189fe4a1451cc740d",
+   "environment": "local",
+   "note": "local Storybook build plus one scratch story (scratch-story.tsx), in neither pull request"
+  },
+  "mainHosted": {
+   "commit": "7ee32e5f847d024d5075cc570e5c80c8dd7e4d88",
+   "environment": "production"
+  }
+ },
+ "browser": "Chromium 149.0.7827.55",
+ "textSize": "Page.setFontSizes {standard: 32, fixed: 26} (200% of 16 and 13)",
+ "rootFontSizeAt200": "32px",
+ "stories": {
+  "head": "core-sidenav--nested-long-labels (the head preview)",
+  "main": "scratch-sidenav-nested-long-labels--nested-long-labels (a local build of main with scratch-story.tsx)",
+  "headLocal": "the same scratch story on a local build of the head (control)"
+ },
+ "run": {
+  "start": "2026-11-21T05:24:14Z",
+  "end": "2026-11-21T05:25:40Z",
+  "loadAtStart": 30.3,
+  "loadAtEnd": 29.35
+ },
+ "method": {
+  "rows": "every visible .astryx-side-nav-item in the container (the nav, or the visible dialog for the flyout and the drawer); depth = the role=group elements around the row inside the container, so 1 is a top-level row here; the long label = the row's leaf with more than 30 characters; its room = the clientWidth of the element with text-overflow ellipsis, and its text width = the right end of the label text's Range box minus the label box's left edge, rounded",
+  "flyout": "Collapse sidebar is clicked, then Projects; the visible dialog is read",
+  "drawer": "390 x 844 at scale 2; the first button named navigation or menu is clicked; the visible dialog is read",
+  "focus": "from page start, Tab until focus is on a row two groups deep; the ring is the set of pixels that differ between the rest frame and the focus frame near the focused element; per side, along its straight part (12 px in from each corner), whether each position has ring pixels, and the band's pixels against the pixel 2 px outside it; the core is the strongest band pixel at a position",
+  "unchanged": "default text size, 1280 x 800, each story's first frame on main's Production and the head's preview"
+ },
+ "scratchStory": "// Copyright (c) Meta Platforms, Inc. and affiliates.\n\n// Scratch, local only: the render of #13192's \"Nested Long Labels\" story, copied verbatim, so that main (which does\n// not have the story) renders the same content. Built into both local Storybooks.\n\nimport type {Meta, StoryObj} from '@storybook/react';\nimport {AppShell} from '@astryxdesign/core/AppShell';\nimport {\n  SideNav,\n  SideNavHeading,\n  SideNavItem,\n  SideNavSection,\n} from '@astryxdesign/core/SideNav';\nimport {Badge} from '@astryxdesign/core/Badge';\nimport {NavIcon} from '@astryxdesign/core/NavIcon';\nimport {Text} from '@astryxdesign/core/Text';\nimport {HomeIcon, FolderIcon, CubeIcon} from '@heroicons/react/24/outline';\n\n// The same layout and decorator as the SideNav stories' meta.\nconst meta: Meta = {\n  title: 'Scratch/SideNav nested long labels',\n  tags: ['no-visual'],\n  parameters: {\n    layout: 'centered',\n  },\n  decorators: [\n    Story => (\n      <div style={{height: 480}}>\n        <Story />\n      </div>\n    ),\n  ],\n};\n\nexport default meta;\ntype Story = StoryObj;\n\nexport const NestedLongLabels: Story = {\n  name: 'Nested Long Labels',\n  render: () => (\n    <AppShell\n      sideNav={\n        <SideNav\n          collapsible\n          header={\n            <SideNavHeading\n              icon={\n                <NavIcon icon={<CubeIcon style={{width: 16, height: 16}} />} />\n              }\n              heading=\"My App\"\n            />\n          }>\n          <SideNavSection title=\"Main\">\n            <SideNavItem label=\"Dashboard\" icon={HomeIcon} href=\"/dashboard\" />\n            <SideNavItem label=\"Projects\" icon={FolderIcon}>\n              <SideNavItem\n                label=\"Quarterly planning for the platform reliability program\"\n                href=\"/projects/planning\"\n                endContent={<Badge label={12} />}\n              />\n              <SideNavItem label=\"Infrastructure migrations and rollouts\">\n                <SideNavItem\n                  label=\"Regional database failover rehearsal schedule\"\n                  href=\"/projects/migrations/failover\"\n                  endContent={<Badge label=\"New\" />}\n                />\n              </SideNavItem>\n            </SideNavItem>\n          </SideNavSection>\n        </SideNav>\n      }>\n      <Text>Content</Text>\n    </AppShell>\n  ),\n};\n",
+ "darkSameAsLight": [
+  {
+   "surface": "rail",
+   "build": "main",
+   "sameAsLight": true
+  },
+  {
+   "surface": "rail",
+   "build": "head",
+   "sameAsLight": true
+  },
+  {
+   "surface": "flyout",
+   "build": "main",
+   "sameAsLight": true
+  },
+  {
+   "surface": "flyout",
+   "build": "head",
+   "sameAsLight": true
+  },
+  {
+   "surface": "drawer",
+   "build": "main",
+   "sameAsLight": true
+  },
+  {
+   "surface": "drawer",
+   "build": "head",
+   "sameAsLight": true
+  }
+ ],
+ "rowSummary": [
+  {
+   "surface": "rail",
+   "build": "main",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Dashboard",
+   "depth": 1,
+   "width": 228,
+   "right": 704.97,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "rail",
+   "build": "main",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Projects",
+   "depth": 1,
+   "width": 228,
+   "right": 704.97,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "rail",
+   "build": "main",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "width": 808.33,
+   "right": 1285.3,
+   "pastTopRows": 580.33,
+   "badge": "12",
+   "badgeRight": 1269.3,
+   "badgePastContainer": 548.33,
+   "labelRoom": 654,
+   "labelTextWidth": 654,
+   "ellipsis": false
+  },
+  {
+   "surface": "rail",
+   "build": "main",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Infrastructure migrations and rollouts",
+   "depth": 2,
+   "width": 808.33,
+   "right": 1285.3,
+   "pastTopRows": 580.33,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": 664,
+   "labelTextWidth": 454,
+   "ellipsis": false
+  },
+  {
+   "surface": "rail",
+   "build": "main",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Regional database failover rehearsal scheduleNew",
+   "depth": 3,
+   "width": 808.33,
+   "right": 1285.3,
+   "pastTopRows": 580.33,
+   "badge": "New",
+   "badgeRight": 1269.3,
+   "badgePastContainer": 548.33,
+   "labelRoom": 584,
+   "labelTextWidth": 576,
+   "ellipsis": false
+  },
+  {
+   "surface": "rail",
+   "build": "head",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Dashboard",
+   "depth": 1,
+   "width": 228,
+   "right": 704.97,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "rail",
+   "build": "head",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Projects",
+   "depth": 1,
+   "width": 228,
+   "right": 704.97,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "rail",
+   "build": "head",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "width": 228,
+   "right": 704.97,
+   "pastTopRows": 0,
+   "badge": "12",
+   "badgeRight": 688.97,
+   "badgePastContainer": -32,
+   "labelRoom": 73,
+   "labelTextWidth": 654,
+   "ellipsis": true
+  },
+  {
+   "surface": "rail",
+   "build": "head",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Infrastructure migrations and rollouts",
+   "depth": 2,
+   "width": 228,
+   "right": 704.97,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": 84,
+   "labelTextWidth": 454,
+   "ellipsis": true
+  },
+  {
+   "surface": "rail",
+   "build": "head",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "text": "Regional database failover rehearsal scheduleNew",
+   "depth": 3,
+   "width": 228,
+   "right": 704.97,
+   "pastTopRows": 0,
+   "badge": "New",
+   "badgeRight": 688.97,
+   "badgePastContainer": -32,
+   "labelRoom": 4,
+   "labelTextWidth": 576,
+   "ellipsis": true
+  },
+  {
+   "surface": "flyout",
+   "build": "main",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 1,
+   "width": 760.33,
+   "right": 1264,
+   "pastTopRows": 0,
+   "badge": "12",
+   "badgeRight": 1248,
+   "badgePastContainer": -24,
+   "labelRoom": 654,
+   "labelTextWidth": 654,
+   "ellipsis": false
+  },
+  {
+   "surface": "flyout",
+   "build": "main",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "text": "Infrastructure migrations and rollouts",
+   "depth": 1,
+   "width": 760.33,
+   "right": 1264,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": 664,
+   "labelTextWidth": 454,
+   "ellipsis": false
+  },
+  {
+   "surface": "flyout",
+   "build": "main",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "text": "Regional database failover rehearsal scheduleNew",
+   "depth": 2,
+   "width": 760.33,
+   "right": 1264,
+   "pastTopRows": 0,
+   "badge": "New",
+   "badgeRight": 1248,
+   "badgePastContainer": -24,
+   "labelRoom": 584,
+   "labelTextWidth": 576,
+   "ellipsis": false
+  },
+  {
+   "surface": "flyout",
+   "build": "head",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 1,
+   "width": 760.33,
+   "right": 1264,
+   "pastTopRows": 0,
+   "badge": "12",
+   "badgeRight": 1248,
+   "badgePastContainer": -24,
+   "labelRoom": 654,
+   "labelTextWidth": 654,
+   "ellipsis": false
+  },
+  {
+   "surface": "flyout",
+   "build": "head",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "text": "Infrastructure migrations and rollouts",
+   "depth": 1,
+   "width": 760.33,
+   "right": 1264,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": 664,
+   "labelTextWidth": 454,
+   "ellipsis": false
+  },
+  {
+   "surface": "flyout",
+   "build": "head",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "text": "Regional database failover rehearsal scheduleNew",
+   "depth": 2,
+   "width": 760.33,
+   "right": 1264,
+   "pastTopRows": 0,
+   "badge": "New",
+   "badgeRight": 1248,
+   "badgePastContainer": -24,
+   "labelRoom": 584,
+   "labelTextWidth": 576,
+   "ellipsis": false
+  },
+  {
+   "surface": "drawer",
+   "build": "main",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Dashboard",
+   "depth": 1,
+   "width": 287,
+   "right": 374,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "drawer",
+   "build": "main",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Projects",
+   "depth": 1,
+   "width": 287,
+   "right": 374,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "drawer",
+   "build": "main",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "width": 808.33,
+   "right": 895.33,
+   "pastTopRows": 521.33,
+   "badge": "12",
+   "badgeRight": 879.33,
+   "badgePastContainer": 489.33,
+   "labelRoom": 654,
+   "labelTextWidth": 654,
+   "ellipsis": false
+  },
+  {
+   "surface": "drawer",
+   "build": "main",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Infrastructure migrations and rollouts",
+   "depth": 2,
+   "width": 808.33,
+   "right": 895.33,
+   "pastTopRows": 521.33,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": 664,
+   "labelTextWidth": 454,
+   "ellipsis": false
+  },
+  {
+   "surface": "drawer",
+   "build": "main",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Regional database failover rehearsal scheduleNew",
+   "depth": 3,
+   "width": 808.33,
+   "right": 895.33,
+   "pastTopRows": 521.33,
+   "badge": "New",
+   "badgeRight": 879.33,
+   "badgePastContainer": 489.33,
+   "labelRoom": 584,
+   "labelTextWidth": 576,
+   "ellipsis": false
+  },
+  {
+   "surface": "drawer",
+   "build": "head",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Dashboard",
+   "depth": 1,
+   "width": 287,
+   "right": 374,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "drawer",
+   "build": "head",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Projects",
+   "depth": 1,
+   "width": 287,
+   "right": 374,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": null,
+   "labelTextWidth": null,
+   "ellipsis": null
+  },
+  {
+   "surface": "drawer",
+   "build": "head",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "width": 287,
+   "right": 374,
+   "pastTopRows": 0,
+   "badge": "12",
+   "badgeRight": 358,
+   "badgePastContainer": -32,
+   "labelRoom": 132,
+   "labelTextWidth": 654,
+   "ellipsis": true
+  },
+  {
+   "surface": "drawer",
+   "build": "head",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Infrastructure migrations and rollouts",
+   "depth": 2,
+   "width": 287,
+   "right": 374,
+   "pastTopRows": 0,
+   "badge": null,
+   "badgeRight": null,
+   "badgePastContainer": null,
+   "labelRoom": 143,
+   "labelTextWidth": 454,
+   "ellipsis": true
+  },
+  {
+   "surface": "drawer",
+   "build": "head",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "text": "Regional database failover rehearsal scheduleNew",
+   "depth": 3,
+   "width": 287,
+   "right": 374,
+   "pastTopRows": 0,
+   "badge": "New",
+   "badgeRight": 358,
+   "badgePastContainer": -32,
+   "labelRoom": 63,
+   "labelTextWidth": 576,
+   "ellipsis": true
+  }
+ ],
+ "controlFrames": 8,
+ "controlFramesIdentical": 8,
+ "nested": [
+  {
+   "surface": "rail",
+   "mode": "light",
+   "build": "head",
+   "story": "core-sidenav--nested-long-labels",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 630.27,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 73,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 614.27,
+      "inkRight": 1194.59,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 84,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 624.97,
+      "inkRight": 995.41,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 608.95,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 4,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 592.95,
+      "inkRight": 1164.91,
+      "boxLeft": 588.97
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    }
+   ],
+   "summary": {
+    "listRight": 704.97,
+    "topWidth": 228,
+    "containerRight": 720.97,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 489.62
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 290.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 459.94
+     }
+    ]
+   },
+   "files": [
+    "rail--light--head.png",
+    "rail-focus--light--head.png"
+   ],
+   "focus": {
+    "tabs": 4,
+    "text": "Quarterly planning for the platform reliability ",
+    "tag": "a",
+    "depth": 2,
+    "rect": {
+     "x": 476.96875,
+     "y": 412,
+     "w": 228,
+     "h": 40
+    },
+    "outline": "solid 2px rgb(27, 27, 27) offset 3px",
+    "boxShadow": "none",
+    "navBox": {
+     "left": 460.96875,
+     "right": 720.96875,
+     "overflowX": "hidden"
+    },
+    "ring": {
+     "found": true,
+     "pixels": 1219,
+     "bbox": {
+      "x0": 472,
+      "y0": 407,
+      "x1": 710,
+      "y1": 457
+     },
+     "sides": [
+      {
+       "side": "top",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 1.22,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 4,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.18,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 1.22,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.1,
+         "median": 4.79,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.15,
+         "median": 1.27,
+         "max": 1.37
+        }
+       ]
+      },
+      {
+       "side": "right",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.16,
+         "median": 4.65,
+         "max": 13.57
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.09,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.09,
+         "median": 4.32,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.03,
+         "median": 1.25,
+         "max": 1.51
+        }
+       ]
+      },
+      {
+       "side": "bottom",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.14,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 14.76,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.09,
+         "median": 5.01,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.21,
+         "median": 1.24,
+         "max": 1.48
+        }
+       ]
+      },
+      {
+       "side": "left",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.17,
+         "median": 4.86,
+         "max": 13.74
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.25,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.08,
+         "median": 4.08,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.01,
+         "median": 1.18,
+         "max": 1.41
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "surface": "flyout",
+   "mode": "light",
+   "build": "head",
+   "story": "core-sidenav--nested-long-labels",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1189.3,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.3,
+      "inkRight": 1173.3,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1184,
+      "inkRight": 974.11,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 1,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1167.98,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1151.98,
+      "inkRight": 1143.61,
+      "boxLeft": 567.67
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1264
+    }
+   ],
+   "summary": {
+    "listRight": 1264,
+    "topWidth": 760.33,
+    "containerRight": 1272,
+    "nested": [
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 1,
+      "width": 760.33,
+      "right": 1264,
+      "pastList": 0,
+      "pastContainer": -8,
+      "badgeRight": 1248,
+      "badgePastList": -16,
+      "badgePastContainer": -24,
+      "ellipsis": false,
+      "labelInkPastList": -120.39
+     }
+    ]
+   },
+   "files": [
+    "flyout--light--head.png"
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "light",
+   "build": "head",
+   "story": "core-sidenav--nested-long-labels",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 299.3,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 132,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 283.3,
+      "inkRight": 804.63,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 143,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 294,
+      "inkRight": 605.44,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 277.98,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 63,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 261.98,
+      "inkRight": 774.94,
+      "boxLeft": 199
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    }
+   ],
+   "summary": {
+    "listRight": 374,
+    "topWidth": 287,
+    "containerRight": 390,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 430.63
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 231.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 400.94
+     }
+    ]
+   },
+   "files": [
+    "drawer--light--head.png"
+   ]
+  },
+  {
+   "surface": "rail",
+   "mode": "light",
+   "build": "main",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 476.97,
+     "right": 1285.3,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1210.59,
+      "right": 1269.3
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1194.59,
+      "inkRight": 1194.59,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 476.97,
+     "right": 1285.3,
+     "width": 808.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1205.3,
+      "inkRight": 995.41,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 476.97,
+     "right": 1285.3,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1189.28,
+      "right": 1269.3
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.28,
+      "inkRight": 1164.91,
+      "boxLeft": 588.97
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1285.3
+    }
+   ],
+   "summary": {
+    "listRight": 704.97,
+    "topWidth": 228,
+    "containerRight": 720.97,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 808.33,
+      "right": 1285.3,
+      "pastList": 580.33,
+      "pastContainer": 564.33,
+      "badgeRight": 1269.3,
+      "badgePastList": 564.33,
+      "badgePastContainer": 548.33,
+      "ellipsis": false,
+      "labelInkPastList": 489.62
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 808.33,
+      "right": 1285.3,
+      "pastList": 580.33,
+      "pastContainer": 564.33,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": false,
+      "labelInkPastList": 290.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 808.33,
+      "right": 1285.3,
+      "pastList": 580.33,
+      "pastContainer": 564.33,
+      "badgeRight": 1269.3,
+      "badgePastList": 564.33,
+      "badgePastContainer": 548.33,
+      "ellipsis": false,
+      "labelInkPastList": 459.94
+     }
+    ]
+   },
+   "files": [
+    "rail--light--main.png",
+    "rail-focus--light--main.png"
+   ],
+   "focus": {
+    "tabs": 4,
+    "text": "Quarterly planning for the platform reliability ",
+    "tag": "a",
+    "depth": 2,
+    "rect": {
+     "x": 476.96875,
+     "y": 412,
+     "w": 808.328125,
+     "h": 40
+    },
+    "outline": "solid 2px rgb(27, 27, 27) offset 3px",
+    "boxShadow": "none",
+    "navBox": {
+     "left": 460.96875,
+     "right": 720.96875,
+     "overflowX": "hidden"
+    },
+    "ring": {
+     "found": true,
+     "pixels": 1130,
+     "bbox": {
+      "x0": 472,
+      "y0": 407,
+      "x1": 721,
+      "y1": 457
+     },
+     "sides": [
+      {
+       "side": "top",
+       "positions": 225,
+       "covered": 225,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 225,
+        "min": 1.22,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 4,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 225,
+         "min": 1.18,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 225,
+         "min": 1.22,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 13,
+         "min": 1.1,
+         "median": 4.58,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 3,
+         "min": 1.16,
+         "median": 1.25,
+         "max": 1.34
+        }
+       ]
+      },
+      {
+       "side": "right",
+       "positions": 26,
+       "covered": 0,
+       "coveredShare": 0,
+       "depthPx": null,
+       "core": null,
+       "coreUnder3": 0,
+       "rows": []
+      },
+      {
+       "side": "bottom",
+       "positions": 225,
+       "covered": 225,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 225,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 225,
+         "min": 1.14,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 225,
+         "min": 14.92,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 13,
+         "min": 1.09,
+         "median": 4.79,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 3,
+         "min": 1.21,
+         "median": 1.24,
+         "max": 1.44
+        }
+       ]
+      },
+      {
+       "side": "left",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.17,
+         "median": 4.86,
+         "max": 13.74
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.25,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.08,
+         "median": 4.08,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.01,
+         "median": 1.18,
+         "max": 1.41
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "surface": "flyout",
+   "mode": "light",
+   "build": "main",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1189.3,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.3,
+      "inkRight": 1173.3,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1184,
+      "inkRight": 974.11,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 1,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1167.98,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1151.98,
+      "inkRight": 1143.61,
+      "boxLeft": 567.67
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1264
+    }
+   ],
+   "summary": {
+    "listRight": 1264,
+    "topWidth": 760.33,
+    "containerRight": 1272,
+    "nested": [
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 1,
+      "width": 760.33,
+      "right": 1264,
+      "pastList": 0,
+      "pastContainer": -8,
+      "badgeRight": 1248,
+      "badgePastList": -16,
+      "badgePastContainer": -24,
+      "ellipsis": false,
+      "labelInkPastList": -120.39
+     }
+    ]
+   },
+   "files": [
+    "flyout--light--main.png"
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "light",
+   "build": "main",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 87,
+     "right": 895.33,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 820.63,
+      "right": 879.33
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 804.63,
+      "inkRight": 804.63,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 87,
+     "right": 895.33,
+     "width": 808.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 815.33,
+      "inkRight": 605.44,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 87,
+     "right": 895.33,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 799.31,
+      "right": 879.33
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 783.31,
+      "inkRight": 774.94,
+      "boxLeft": 199
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 895.33
+    }
+   ],
+   "summary": {
+    "listRight": 374,
+    "topWidth": 287,
+    "containerRight": 390,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 808.33,
+      "right": 895.33,
+      "pastList": 521.33,
+      "pastContainer": 505.33,
+      "badgeRight": 879.33,
+      "badgePastList": 505.33,
+      "badgePastContainer": 489.33,
+      "ellipsis": false,
+      "labelInkPastList": 430.63
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 808.33,
+      "right": 895.33,
+      "pastList": 521.33,
+      "pastContainer": 505.33,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": false,
+      "labelInkPastList": 231.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 808.33,
+      "right": 895.33,
+      "pastList": 521.33,
+      "pastContainer": 505.33,
+      "badgeRight": 879.33,
+      "badgePastList": 505.33,
+      "badgePastContainer": 489.33,
+      "ellipsis": false,
+      "labelInkPastList": 400.94
+     }
+    ]
+   },
+   "files": [
+    "drawer--light--main.png"
+   ]
+  },
+  {
+   "surface": "rail",
+   "mode": "light",
+   "build": "headLocal",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 630.27,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 73,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 614.27,
+      "inkRight": 1194.59,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 84,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 624.97,
+      "inkRight": 995.41,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 608.95,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 4,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 592.95,
+      "inkRight": 1164.91,
+      "boxLeft": 588.97
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    }
+   ],
+   "summary": {
+    "listRight": 704.97,
+    "topWidth": 228,
+    "containerRight": 720.97,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 489.62
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 290.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 459.94
+     }
+    ]
+   },
+   "files": [
+    "rail--light--headLocal.png",
+    "rail-focus--light--headLocal.png"
+   ],
+   "focus": {
+    "tabs": 4,
+    "text": "Quarterly planning for the platform reliability ",
+    "tag": "a",
+    "depth": 2,
+    "rect": {
+     "x": 476.96875,
+     "y": 412,
+     "w": 228,
+     "h": 40
+    },
+    "outline": "solid 2px rgb(27, 27, 27) offset 3px",
+    "boxShadow": "none",
+    "navBox": {
+     "left": 460.96875,
+     "right": 720.96875,
+     "overflowX": "hidden"
+    },
+    "ring": {
+     "found": true,
+     "pixels": 1219,
+     "bbox": {
+      "x0": 472,
+      "y0": 407,
+      "x1": 710,
+      "y1": 457
+     },
+     "sides": [
+      {
+       "side": "top",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 1.22,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 4,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.18,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 1.22,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.1,
+         "median": 4.79,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.15,
+         "median": 1.27,
+         "max": 1.37
+        }
+       ]
+      },
+      {
+       "side": "right",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.16,
+         "median": 4.65,
+         "max": 13.57
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.09,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.09,
+         "median": 4.32,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.03,
+         "median": 1.25,
+         "max": 1.51
+        }
+       ]
+      },
+      {
+       "side": "bottom",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.14,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 14.76,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.09,
+         "median": 5.01,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.21,
+         "median": 1.24,
+         "max": 1.48
+        }
+       ]
+      },
+      {
+       "side": "left",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.17,
+         "median": 4.86,
+         "max": 13.74
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.25,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.08,
+         "median": 4.08,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.01,
+         "median": 1.18,
+         "max": 1.41
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "surface": "flyout",
+   "mode": "light",
+   "build": "headLocal",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1189.3,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.3,
+      "inkRight": 1173.3,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1184,
+      "inkRight": 974.11,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 1,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1167.98,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1151.98,
+      "inkRight": 1143.61,
+      "boxLeft": 567.67
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1264
+    }
+   ],
+   "summary": {
+    "listRight": 1264,
+    "topWidth": 760.33,
+    "containerRight": 1272,
+    "nested": [
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 1,
+      "width": 760.33,
+      "right": 1264,
+      "pastList": 0,
+      "pastContainer": -8,
+      "badgeRight": 1248,
+      "badgePastList": -16,
+      "badgePastContainer": -24,
+      "ellipsis": false,
+      "labelInkPastList": -120.39
+     }
+    ]
+   },
+   "files": [
+    "flyout--light--headLocal.png"
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "light",
+   "build": "headLocal",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 299.3,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 132,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 283.3,
+      "inkRight": 804.63,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 143,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 294,
+      "inkRight": 605.44,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 277.98,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 63,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 261.98,
+      "inkRight": 774.94,
+      "boxLeft": 199
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    }
+   ],
+   "summary": {
+    "listRight": 374,
+    "topWidth": 287,
+    "containerRight": 390,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 430.63
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 231.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 400.94
+     }
+    ]
+   },
+   "files": [
+    "drawer--light--headLocal.png"
+   ]
+  },
+  {
+   "surface": "rail",
+   "mode": "dark",
+   "build": "head",
+   "story": "core-sidenav--nested-long-labels",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 630.27,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 73,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 614.27,
+      "inkRight": 1194.59,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 84,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 624.97,
+      "inkRight": 995.41,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 608.95,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 4,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 592.95,
+      "inkRight": 1164.91,
+      "boxLeft": 588.97
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    }
+   ],
+   "summary": {
+    "listRight": 704.97,
+    "topWidth": 228,
+    "containerRight": 720.97,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 489.62
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 290.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 459.94
+     }
+    ]
+   },
+   "files": [
+    "rail--dark--head.png",
+    "rail-focus--dark--head.png"
+   ],
+   "focus": {
+    "tabs": 4,
+    "text": "Quarterly planning for the platform reliability ",
+    "tag": "a",
+    "depth": 2,
+    "rect": {
+     "x": 476.96875,
+     "y": 412,
+     "w": 228,
+     "h": 40
+    },
+    "outline": "solid 2px rgb(241, 241, 241) offset 3px",
+    "boxShadow": "none",
+    "navBox": {
+     "left": 460.96875,
+     "right": 720.96875,
+     "overflowX": "hidden"
+    },
+    "ring": {
+     "found": true,
+     "pixels": 1217,
+     "bbox": {
+      "x0": 472,
+      "y0": 407,
+      "x1": 710,
+      "y1": 457
+     },
+     "sides": [
+      {
+       "side": "top",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 1.13,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 4,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.13,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 1.13,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.12,
+         "median": 6.75,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.18,
+         "median": 1.38,
+         "max": 1.54
+        }
+       ]
+      },
+      {
+       "side": "right",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.11,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.2,
+         "median": 6.51,
+         "max": 13.8
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 14.98,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.11,
+         "median": 6.12,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.02,
+         "median": 1.34,
+         "max": 1.8
+        }
+       ]
+      },
+      {
+       "side": "bottom",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.17,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 14.71,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.11,
+         "median": 6.91,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.29,
+         "median": 1.32,
+         "max": 1.74
+        }
+       ]
+      },
+      {
+       "side": "left",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.11,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.22,
+         "median": 6.75,
+         "max": 13.93
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.11,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.1,
+         "median": 5.82,
+         "max": 15.11
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 5,
+         "min": 1.06,
+         "median": 1.23,
+         "max": 1.61
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "surface": "flyout",
+   "mode": "dark",
+   "build": "head",
+   "story": "core-sidenav--nested-long-labels",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1189.3,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.3,
+      "inkRight": 1173.3,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1184,
+      "inkRight": 974.11,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 1,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1167.98,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1151.98,
+      "inkRight": 1143.61,
+      "boxLeft": 567.67
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1264
+    }
+   ],
+   "summary": {
+    "listRight": 1264,
+    "topWidth": 760.33,
+    "containerRight": 1272,
+    "nested": [
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 1,
+      "width": 760.33,
+      "right": 1264,
+      "pastList": 0,
+      "pastContainer": -8,
+      "badgeRight": 1248,
+      "badgePastList": -16,
+      "badgePastContainer": -24,
+      "ellipsis": false,
+      "labelInkPastList": -120.39
+     }
+    ]
+   },
+   "files": [
+    "flyout--dark--head.png"
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "dark",
+   "build": "head",
+   "story": "core-sidenav--nested-long-labels",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 299.3,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 132,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 283.3,
+      "inkRight": 804.63,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 143,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 294,
+      "inkRight": 605.44,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 277.98,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 63,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 261.98,
+      "inkRight": 774.94,
+      "boxLeft": 199
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    }
+   ],
+   "summary": {
+    "listRight": 374,
+    "topWidth": 287,
+    "containerRight": 390,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 430.63
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 231.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 400.94
+     }
+    ]
+   },
+   "files": [
+    "drawer--dark--head.png"
+   ]
+  },
+  {
+   "surface": "rail",
+   "mode": "dark",
+   "build": "main",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 476.97,
+     "right": 1285.3,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1210.59,
+      "right": 1269.3
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1194.59,
+      "inkRight": 1194.59,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 476.97,
+     "right": 1285.3,
+     "width": 808.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1205.3,
+      "inkRight": 995.41,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 476.97,
+     "right": 1285.3,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1189.28,
+      "right": 1269.3
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.28,
+      "inkRight": 1164.91,
+      "boxLeft": 588.97
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1285.3
+    }
+   ],
+   "summary": {
+    "listRight": 704.97,
+    "topWidth": 228,
+    "containerRight": 720.97,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 808.33,
+      "right": 1285.3,
+      "pastList": 580.33,
+      "pastContainer": 564.33,
+      "badgeRight": 1269.3,
+      "badgePastList": 564.33,
+      "badgePastContainer": 548.33,
+      "ellipsis": false,
+      "labelInkPastList": 489.62
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 808.33,
+      "right": 1285.3,
+      "pastList": 580.33,
+      "pastContainer": 564.33,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": false,
+      "labelInkPastList": 290.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 808.33,
+      "right": 1285.3,
+      "pastList": 580.33,
+      "pastContainer": 564.33,
+      "badgeRight": 1269.3,
+      "badgePastList": 564.33,
+      "badgePastContainer": 548.33,
+      "ellipsis": false,
+      "labelInkPastList": 459.94
+     }
+    ]
+   },
+   "files": [
+    "rail--dark--main.png",
+    "rail-focus--dark--main.png"
+   ],
+   "focus": {
+    "tabs": 4,
+    "text": "Quarterly planning for the platform reliability ",
+    "tag": "a",
+    "depth": 2,
+    "rect": {
+     "x": 476.96875,
+     "y": 412,
+     "w": 808.328125,
+     "h": 40
+    },
+    "outline": "solid 2px rgb(241, 241, 241) offset 3px",
+    "boxShadow": "none",
+    "navBox": {
+     "left": 460.96875,
+     "right": 720.96875,
+     "overflowX": "hidden"
+    },
+    "ring": {
+     "found": true,
+     "pixels": 1128,
+     "bbox": {
+      "x0": 472,
+      "y0": 407,
+      "x1": 721,
+      "y1": 457
+     },
+     "sides": [
+      {
+       "side": "top",
+       "positions": 225,
+       "covered": 225,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 225,
+        "min": 1.13,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 4,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 225,
+         "min": 1.13,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 225,
+         "min": 1.13,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 13,
+         "min": 1.12,
+         "median": 6.43,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 3,
+         "min": 1.18,
+         "median": 1.34,
+         "max": 1.49
+        }
+       ]
+      },
+      {
+       "side": "right",
+       "positions": 26,
+       "covered": 0,
+       "coveredShare": 0,
+       "depthPx": null,
+       "core": null,
+       "coreUnder3": 0,
+       "rows": []
+      },
+      {
+       "side": "bottom",
+       "positions": 225,
+       "covered": 225,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 225,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 225,
+         "min": 1.17,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 225,
+         "min": 14.85,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 13,
+         "min": 1.11,
+         "median": 6.67,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 3,
+         "min": 1.29,
+         "median": 1.32,
+         "max": 1.66
+        }
+       ]
+      },
+      {
+       "side": "left",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.11,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.22,
+         "median": 6.75,
+         "max": 13.93
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.11,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.1,
+         "median": 5.82,
+         "max": 15.11
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 5,
+         "min": 1.06,
+         "median": 1.23,
+         "max": 1.61
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "surface": "flyout",
+   "mode": "dark",
+   "build": "main",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1189.3,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.3,
+      "inkRight": 1173.3,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1184,
+      "inkRight": 974.11,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 1,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1167.98,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1151.98,
+      "inkRight": 1143.61,
+      "boxLeft": 567.67
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1264
+    }
+   ],
+   "summary": {
+    "listRight": 1264,
+    "topWidth": 760.33,
+    "containerRight": 1272,
+    "nested": [
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 1,
+      "width": 760.33,
+      "right": 1264,
+      "pastList": 0,
+      "pastContainer": -8,
+      "badgeRight": 1248,
+      "badgePastList": -16,
+      "badgePastContainer": -24,
+      "ellipsis": false,
+      "labelInkPastList": -120.39
+     }
+    ]
+   },
+   "files": [
+    "flyout--dark--main.png"
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "dark",
+   "build": "main",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 87,
+     "right": 895.33,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 820.63,
+      "right": 879.33
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 804.63,
+      "inkRight": 804.63,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 87,
+     "right": 895.33,
+     "width": 808.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 815.33,
+      "inkRight": 605.44,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 87,
+     "right": 895.33,
+     "width": 808.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 799.31,
+      "right": 879.33
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 783.31,
+      "inkRight": 774.94,
+      "boxLeft": 199
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 895.33
+    }
+   ],
+   "summary": {
+    "listRight": 374,
+    "topWidth": 287,
+    "containerRight": 390,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 808.33,
+      "right": 895.33,
+      "pastList": 521.33,
+      "pastContainer": 505.33,
+      "badgeRight": 879.33,
+      "badgePastList": 505.33,
+      "badgePastContainer": 489.33,
+      "ellipsis": false,
+      "labelInkPastList": 430.63
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 808.33,
+      "right": 895.33,
+      "pastList": 521.33,
+      "pastContainer": 505.33,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": false,
+      "labelInkPastList": 231.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 808.33,
+      "right": 895.33,
+      "pastList": 521.33,
+      "pastContainer": 505.33,
+      "badgeRight": 879.33,
+      "badgePastList": 505.33,
+      "badgePastContainer": 489.33,
+      "ellipsis": false,
+      "labelInkPastList": 400.94
+     }
+    ]
+   },
+   "files": [
+    "drawer--dark--main.png"
+   ]
+  },
+  {
+   "surface": "rail",
+   "mode": "dark",
+   "build": "headLocal",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "nav",
+    "role": "navigation",
+    "left": 460.97,
+    "right": 720.97,
+    "width": 260
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 630.27,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 73,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 614.27,
+      "inkRight": 1194.59,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 84,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 624.97,
+      "inkRight": 995.41,
+      "boxLeft": 540.97
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 476.97,
+     "right": 704.97,
+     "width": 228,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 608.95,
+      "right": 688.97
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 4,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 592.95,
+      "inkRight": 1164.91,
+      "boxLeft": 588.97
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 704.97
+    }
+   ],
+   "summary": {
+    "listRight": 704.97,
+    "topWidth": 228,
+    "containerRight": 720.97,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 489.62
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 290.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 228,
+      "right": 704.97,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 688.97,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 459.94
+     }
+    ]
+   },
+   "files": [
+    "rail--dark--headLocal.png",
+    "rail-focus--dark--headLocal.png"
+   ],
+   "focus": {
+    "tabs": 4,
+    "text": "Quarterly planning for the platform reliability ",
+    "tag": "a",
+    "depth": 2,
+    "rect": {
+     "x": 476.96875,
+     "y": 412,
+     "w": 228,
+     "h": 40
+    },
+    "outline": "solid 2px rgb(241, 241, 241) offset 3px",
+    "boxShadow": "none",
+    "navBox": {
+     "left": 460.96875,
+     "right": 720.96875,
+     "overflowX": "hidden"
+    },
+    "ring": {
+     "found": true,
+     "pixels": 1217,
+     "bbox": {
+      "x0": 472,
+      "y0": 407,
+      "x1": 710,
+      "y1": 457
+     },
+     "sides": [
+      {
+       "side": "top",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 1.13,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 4,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.13,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 1.13,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.12,
+         "median": 6.75,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.18,
+         "median": 1.38,
+         "max": 1.54
+        }
+       ]
+      },
+      {
+       "side": "right",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.11,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.2,
+         "median": 6.51,
+         "max": 13.8
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 14.98,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.11,
+         "median": 6.12,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.02,
+         "median": 1.34,
+         "max": 1.8
+        }
+       ]
+      },
+      {
+       "side": "bottom",
+       "positions": 214,
+       "covered": 214,
+       "coveredShare": 1,
+       "depthPx": [
+        2,
+        4
+       ],
+       "core": {
+        "n": 214,
+        "min": 15.25,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 214,
+         "min": 1.17,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 214,
+         "min": 14.71,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.11,
+         "median": 6.91,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 6,
+         "min": 1.29,
+         "median": 1.32,
+         "max": 1.74
+        }
+       ]
+      },
+      {
+       "side": "left",
+       "positions": 26,
+       "covered": 26,
+       "coveredShare": 1,
+       "depthPx": [
+        3,
+        4
+       ],
+       "core": {
+        "n": 26,
+        "min": 15.11,
+        "median": 15.25,
+        "max": 15.25
+       },
+       "coreUnder3": 0,
+       "rows": [
+        {
+         "fromOuterEdge": 0,
+         "n": 26,
+         "min": 1.22,
+         "median": 6.75,
+         "max": 13.93
+        },
+        {
+         "fromOuterEdge": 1,
+         "n": 26,
+         "min": 15.11,
+         "median": 15.25,
+         "max": 15.25
+        },
+        {
+         "fromOuterEdge": 2,
+         "n": 26,
+         "min": 1.1,
+         "median": 5.82,
+         "max": 15.11
+        },
+        {
+         "fromOuterEdge": 3,
+         "n": 5,
+         "min": 1.06,
+         "median": 1.23,
+         "max": 1.61
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "surface": "flyout",
+   "mode": "dark",
+   "build": "headLocal",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "div",
+    "role": "dialog",
+    "left": 495.67,
+    "right": 1272,
+    "width": 776.33
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 1189.3,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 654,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1173.3,
+      "inkRight": 1173.3,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 0,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 664,
+      "clientWidth": 664,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1184,
+      "inkRight": 974.11,
+      "boxLeft": 519.67
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 1,
+     "left": 503.67,
+     "right": 1264,
+     "width": 760.33,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 1167.98,
+      "right": 1248
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 584,
+      "clientWidth": 584,
+      "cut": false,
+      "ellipsis": false,
+      "boxRight": 1151.98,
+      "inkRight": 1143.61,
+      "boxLeft": 567.67
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 1264
+    }
+   ],
+   "summary": {
+    "listRight": 1264,
+    "topWidth": 760.33,
+    "containerRight": 1272,
+    "nested": [
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 1,
+      "width": 760.33,
+      "right": 1264,
+      "pastList": 0,
+      "pastContainer": -8,
+      "badgeRight": 1248,
+      "badgePastList": -16,
+      "badgePastContainer": -24,
+      "ellipsis": false,
+      "labelInkPastList": -120.39
+     }
+    ]
+   },
+   "files": [
+    "flyout--dark--headLocal.png"
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "dark",
+   "build": "headLocal",
+   "story": "scratch-sidenav-nested-long-labels--nested-long-labels",
+   "container": {
+    "tag": "dialog",
+    "role": null,
+    "left": 0,
+    "right": 390,
+    "width": 390
+   },
+   "rootFontSize": "32px",
+   "rows": [
+    {
+     "text": "Dashboard",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Projects",
+     "depth": 1,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": null
+    },
+    {
+     "text": "Quarterly planning for the platform reliability ",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "12",
+      "left": 299.3,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 654,
+      "clientWidth": 132,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 283.3,
+      "inkRight": 804.63,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Infrastructure migrations and rollouts",
+     "depth": 2,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": null,
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 454,
+      "clientWidth": 143,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 294,
+      "inkRight": 605.44,
+      "boxLeft": 151
+     }
+    },
+    {
+     "text": "Regional database failover rehearsal scheduleNew",
+     "depth": 3,
+     "left": 87,
+     "right": 374,
+     "width": 287,
+     "height": 40,
+     "badge": {
+      "text": "New",
+      "left": 277.98,
+      "right": 358
+     },
+     "label": {
+      "textOverflow": "ellipsis",
+      "overflow": "hidden",
+      "whiteSpace": "nowrap",
+      "scrollWidth": 576,
+      "clientWidth": 63,
+      "cut": true,
+      "ellipsis": true,
+      "boxRight": 261.98,
+      "inkRight": 774.94,
+      "boxLeft": 199
+     }
+    }
+   ],
+   "groups": [
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    },
+    {
+     "id": "_r_-children",
+     "overflow": "visible",
+     "right": 374
+    }
+   ],
+   "summary": {
+    "listRight": 374,
+    "topWidth": 287,
+    "containerRight": 390,
+    "nested": [
+     {
+      "text": "Quarterly planning for the platform reliability ",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 430.63
+     },
+     {
+      "text": "Infrastructure migrations and rollouts",
+      "depth": 2,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": null,
+      "badgePastList": null,
+      "badgePastContainer": null,
+      "ellipsis": true,
+      "labelInkPastList": 231.44
+     },
+     {
+      "text": "Regional database failover rehearsal scheduleNew",
+      "depth": 3,
+      "width": 287,
+      "right": 374,
+      "pastList": 0,
+      "pastContainer": -16,
+      "badgeRight": 358,
+      "badgePastList": -16,
+      "badgePastContainer": -32,
+      "ellipsis": true,
+      "labelInkPastList": 400.94
+     }
+    ]
+   },
+   "files": [
+    "drawer--dark--headLocal.png"
+   ]
+  }
+ ],
+ "focus": [
+  {
+   "mode": "light",
+   "build": "main",
+   "tabs": 4,
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "outline": "solid 2px rgb(27, 27, 27) offset 3px",
+   "ringBox": {
+    "x0": 472,
+    "y0": 407,
+    "x1": 721,
+    "y1": 457
+   },
+   "navBox": {
+    "left": 460.96875,
+    "right": 720.96875,
+    "overflowX": "hidden"
+   },
+   "sides": [
+    {
+     "side": "top",
+     "positions": 225,
+     "covered": 225,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 225,
+      "min": 1.22,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 4,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 225,
+       "min": 1.18,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 225,
+       "min": 1.22,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 13,
+       "min": 1.1,
+       "median": 4.58,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 3,
+       "min": 1.16,
+       "median": 1.25,
+       "max": 1.34
+      }
+     ]
+    },
+    {
+     "side": "right",
+     "positions": 26,
+     "covered": 0,
+     "coveredShare": 0,
+     "depthPx": null,
+     "core": null,
+     "coreUnder3": 0,
+     "rows": []
+    },
+    {
+     "side": "bottom",
+     "positions": 225,
+     "covered": 225,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 225,
+      "min": 15.25,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 225,
+       "min": 1.14,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 225,
+       "min": 14.92,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 13,
+       "min": 1.09,
+       "median": 4.79,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 3,
+       "min": 1.21,
+       "median": 1.24,
+       "max": 1.44
+      }
+     ]
+    },
+    {
+     "side": "left",
+     "positions": 26,
+     "covered": 26,
+     "coveredShare": 1,
+     "depthPx": [
+      3,
+      4
+     ],
+     "core": {
+      "n": 26,
+      "min": 15.25,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 26,
+       "min": 1.17,
+       "median": 4.86,
+       "max": 13.74
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 26,
+       "min": 15.25,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.08,
+       "median": 4.08,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.01,
+       "median": 1.18,
+       "max": 1.41
+      }
+     ]
+    }
+   ],
+   "topLowPositions": [
+    {
+     "x": 584,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    },
+    {
+     "x": 585,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    },
+    {
+     "x": 586,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    },
+    {
+     "x": 587,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    }
+   ],
+   "topCoreMinElsewhere": 9.07
+  },
+  {
+   "mode": "light",
+   "build": "head",
+   "tabs": 4,
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "outline": "solid 2px rgb(27, 27, 27) offset 3px",
+   "ringBox": {
+    "x0": 472,
+    "y0": 407,
+    "x1": 710,
+    "y1": 457
+   },
+   "navBox": {
+    "left": 460.96875,
+    "right": 720.96875,
+    "overflowX": "hidden"
+   },
+   "sides": [
+    {
+     "side": "top",
+     "positions": 214,
+     "covered": 214,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 214,
+      "min": 1.22,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 4,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 214,
+       "min": 1.18,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 214,
+       "min": 1.22,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.1,
+       "median": 4.79,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.15,
+       "median": 1.27,
+       "max": 1.37
+      }
+     ]
+    },
+    {
+     "side": "right",
+     "positions": 26,
+     "covered": 26,
+     "coveredShare": 1,
+     "depthPx": [
+      3,
+      4
+     ],
+     "core": {
+      "n": 26,
+      "min": 15.25,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 26,
+       "min": 1.16,
+       "median": 4.65,
+       "max": 13.57
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 26,
+       "min": 15.09,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.09,
+       "median": 4.32,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.03,
+       "median": 1.25,
+       "max": 1.51
+      }
+     ]
+    },
+    {
+     "side": "bottom",
+     "positions": 214,
+     "covered": 214,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 214,
+      "min": 15.25,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 214,
+       "min": 1.14,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 214,
+       "min": 14.76,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.09,
+       "median": 5.01,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.21,
+       "median": 1.24,
+       "max": 1.48
+      }
+     ]
+    },
+    {
+     "side": "left",
+     "positions": 26,
+     "covered": 26,
+     "coveredShare": 1,
+     "depthPx": [
+      3,
+      4
+     ],
+     "core": {
+      "n": 26,
+      "min": 15.25,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 26,
+       "min": 1.17,
+       "median": 4.86,
+       "max": 13.74
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 26,
+       "min": 15.25,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.08,
+       "median": 4.08,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.01,
+       "median": 1.18,
+       "max": 1.41
+      }
+     ]
+    }
+   ],
+   "topLowPositions": [
+    {
+     "x": 584,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    },
+    {
+     "x": 585,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    },
+    {
+     "x": 586,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    },
+    {
+     "x": 587,
+     "outside": [
+      0,
+      0,
+      0
+     ],
+     "ring": [
+      27,
+      27,
+      27
+     ],
+     "core": 1.22
+    }
+   ],
+   "topCoreMinElsewhere": 9.07
+  },
+  {
+   "mode": "dark",
+   "build": "main",
+   "tabs": 4,
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "outline": "solid 2px rgb(241, 241, 241) offset 3px",
+   "ringBox": {
+    "x0": 472,
+    "y0": 407,
+    "x1": 721,
+    "y1": 457
+   },
+   "navBox": {
+    "left": 460.96875,
+    "right": 720.96875,
+    "overflowX": "hidden"
+   },
+   "sides": [
+    {
+     "side": "top",
+     "positions": 225,
+     "covered": 225,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 225,
+      "min": 1.13,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 4,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 225,
+       "min": 1.13,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 225,
+       "min": 1.13,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 13,
+       "min": 1.12,
+       "median": 6.43,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 3,
+       "min": 1.18,
+       "median": 1.34,
+       "max": 1.49
+      }
+     ]
+    },
+    {
+     "side": "right",
+     "positions": 26,
+     "covered": 0,
+     "coveredShare": 0,
+     "depthPx": null,
+     "core": null,
+     "coreUnder3": 0,
+     "rows": []
+    },
+    {
+     "side": "bottom",
+     "positions": 225,
+     "covered": 225,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 225,
+      "min": 15.25,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 225,
+       "min": 1.17,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 225,
+       "min": 14.85,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 13,
+       "min": 1.11,
+       "median": 6.67,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 3,
+       "min": 1.29,
+       "median": 1.32,
+       "max": 1.66
+      }
+     ]
+    },
+    {
+     "side": "left",
+     "positions": 26,
+     "covered": 26,
+     "coveredShare": 1,
+     "depthPx": [
+      3,
+      4
+     ],
+     "core": {
+      "n": 26,
+      "min": 15.11,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 26,
+       "min": 1.22,
+       "median": 6.75,
+       "max": 13.93
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 26,
+       "min": 15.11,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.1,
+       "median": 5.82,
+       "max": 15.11
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 5,
+       "min": 1.06,
+       "median": 1.23,
+       "max": 1.61
+      }
+     ]
+    }
+   ],
+   "topLowPositions": [
+    {
+     "x": 584,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    },
+    {
+     "x": 585,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    },
+    {
+     "x": 586,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    },
+    {
+     "x": 587,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    }
+   ],
+   "topCoreMinElsewhere": 6.11
+  },
+  {
+   "mode": "dark",
+   "build": "head",
+   "tabs": 4,
+   "text": "Quarterly planning for the platform reliability ",
+   "depth": 2,
+   "outline": "solid 2px rgb(241, 241, 241) offset 3px",
+   "ringBox": {
+    "x0": 472,
+    "y0": 407,
+    "x1": 710,
+    "y1": 457
+   },
+   "navBox": {
+    "left": 460.96875,
+    "right": 720.96875,
+    "overflowX": "hidden"
+   },
+   "sides": [
+    {
+     "side": "top",
+     "positions": 214,
+     "covered": 214,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 214,
+      "min": 1.13,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 4,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 214,
+       "min": 1.13,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 214,
+       "min": 1.13,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.12,
+       "median": 6.75,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.18,
+       "median": 1.38,
+       "max": 1.54
+      }
+     ]
+    },
+    {
+     "side": "right",
+     "positions": 26,
+     "covered": 26,
+     "coveredShare": 1,
+     "depthPx": [
+      3,
+      4
+     ],
+     "core": {
+      "n": 26,
+      "min": 15.11,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 26,
+       "min": 1.2,
+       "median": 6.51,
+       "max": 13.8
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 26,
+       "min": 14.98,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.11,
+       "median": 6.12,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.02,
+       "median": 1.34,
+       "max": 1.8
+      }
+     ]
+    },
+    {
+     "side": "bottom",
+     "positions": 214,
+     "covered": 214,
+     "coveredShare": 1,
+     "depthPx": [
+      2,
+      4
+     ],
+     "core": {
+      "n": 214,
+      "min": 15.25,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 214,
+       "min": 1.17,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 214,
+       "min": 14.71,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.11,
+       "median": 6.91,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 6,
+       "min": 1.29,
+       "median": 1.32,
+       "max": 1.74
+      }
+     ]
+    },
+    {
+     "side": "left",
+     "positions": 26,
+     "covered": 26,
+     "coveredShare": 1,
+     "depthPx": [
+      3,
+      4
+     ],
+     "core": {
+      "n": 26,
+      "min": 15.11,
+      "median": 15.25,
+      "max": 15.25
+     },
+     "coreUnder3": 0,
+     "rows": [
+      {
+       "fromOuterEdge": 0,
+       "n": 26,
+       "min": 1.22,
+       "median": 6.75,
+       "max": 13.93
+      },
+      {
+       "fromOuterEdge": 1,
+       "n": 26,
+       "min": 15.11,
+       "median": 15.25,
+       "max": 15.25
+      },
+      {
+       "fromOuterEdge": 2,
+       "n": 26,
+       "min": 1.1,
+       "median": 5.82,
+       "max": 15.11
+      },
+      {
+       "fromOuterEdge": 3,
+       "n": 5,
+       "min": 1.06,
+       "median": 1.23,
+       "max": 1.61
+      }
+     ]
+    }
+   ],
+   "topLowPositions": [
+    {
+     "x": 584,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    },
+    {
+     "x": 585,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    },
+    {
+     "x": 586,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    },
+    {
+     "x": 587,
+     "outside": [
+      255,
+      255,
+      255
+     ],
+     "ring": [
+      241,
+      241,
+      241
+     ],
+     "core": 1.13
+    }
+   ],
+   "topCoreMinElsewhere": 6.11
+  }
+ ],
+ "control": [
+  {
+   "surface": "rail",
+   "mode": "light",
+   "readingsEqual": true,
+   "frames": [
+    {
+     "head": "rail--light--head.png",
+     "headLocal": "rail--light--headLocal.png",
+     "byteIdentical": true
+    },
+    {
+     "head": "rail-focus--light--head.png",
+     "headLocal": "rail-focus--light--headLocal.png",
+     "byteIdentical": true
+    }
+   ]
+  },
+  {
+   "surface": "rail",
+   "mode": "dark",
+   "readingsEqual": true,
+   "frames": [
+    {
+     "head": "rail--dark--head.png",
+     "headLocal": "rail--dark--headLocal.png",
+     "byteIdentical": true
+    },
+    {
+     "head": "rail-focus--dark--head.png",
+     "headLocal": "rail-focus--dark--headLocal.png",
+     "byteIdentical": true
+    }
+   ]
+  },
+  {
+   "surface": "flyout",
+   "mode": "light",
+   "readingsEqual": true,
+   "frames": [
+    {
+     "head": "flyout--light--head.png",
+     "headLocal": "flyout--light--headLocal.png",
+     "byteIdentical": true
+    }
+   ]
+  },
+  {
+   "surface": "flyout",
+   "mode": "dark",
+   "readingsEqual": true,
+   "frames": [
+    {
+     "head": "flyout--dark--head.png",
+     "headLocal": "flyout--dark--headLocal.png",
+     "byteIdentical": true
+    }
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "light",
+   "readingsEqual": true,
+   "frames": [
+    {
+     "head": "drawer--light--head.png",
+     "headLocal": "drawer--light--headLocal.png",
+     "byteIdentical": true
+    }
+   ]
+  },
+  {
+   "surface": "drawer",
+   "mode": "dark",
+   "readingsEqual": true,
+   "frames": [
+    {
+     "head": "drawer--dark--head.png",
+     "headLocal": "drawer--dark--headLocal.png",
+     "byteIdentical": true
+    }
+   ]
+  }
+ ],
+ "mainVsHead": [
+  {
+   "frame": "rail--light",
+   "differingPx": 7243
+  },
+  {
+   "frame": "rail-focus--light",
+   "differingPx": 7564
+  },
+  {
+   "frame": "rail--dark",
+   "differingPx": 7226
+  },
+  {
+   "frame": "rail-focus--dark",
+   "differingPx": 7547
+  },
+  {
+   "frame": "flyout--light",
+   "differingPx": 0
+  },
+  {
+   "frame": "flyout--dark",
+   "differingPx": 0
+  },
+  {
+   "frame": "drawer--light",
+   "differingPx": 28980
+  },
+  {
+   "frame": "drawer--dark",
+   "differingPx": 28972
+  }
+ ],
+ "unchanged": [
+  {
+   "story": "core-sidenav--nested-items",
+   "mode": "light",
+   "main": "unchanged--nested-items--light--main.png",
+   "head": "unchanged--nested-items--light--head.png",
+   "differingPx": 0,
+   "identical": true
+  },
+  {
+   "story": "core-sidenav--nested-items",
+   "mode": "dark",
+   "main": "unchanged--nested-items--dark--main.png",
+   "head": "unchanged--nested-items--dark--head.png",
+   "differingPx": 0,
+   "identical": true
+  },
+  {
+   "story": "core-sidenav--end-content",
+   "mode": "light",
+   "main": "unchanged--end-content--light--main.png",
+   "head": "unchanged--end-content--light--head.png",
+   "differingPx": 0,
+   "identical": true
+  },
+  {
+   "story": "core-sidenav--end-content",
+   "mode": "dark",
+   "main": "unchanged--end-content--dark--main.png",
+   "head": "unchanged--end-content--dark--head.png",
+   "differingPx": 0,
+   "identical": true
+  },
+  {
+   "story": "core-sidenav--collapsible-sidebar",
+   "mode": "light",
+   "main": "unchanged--collapsible-sidebar--light--main.png",
+   "head": "unchanged--collapsible-sidebar--light--head.png",
+   "differingPx": 0,
+   "identical": true
+  },
+  {
+   "story": "core-sidenav--collapsible-sidebar",
+   "mode": "dark",
+   "main": "unchanged--collapsible-sidebar--dark--main.png",
+   "head": "unchanged--collapsible-sidebar--dark--head.png",
+   "differingPx": 0,
+   "identical": true
+  }
+ ],
+ "stills": [
+  "drawer--dark--head.png",
+  "drawer--dark--main.png",
+  "drawer--light--head.png",
+  "drawer--light--main.png",
+  "flyout--dark--head.png",
+  "flyout--dark--main.png",
+  "flyout--light--head.png",
+  "flyout--light--main.png",
+  "rail--dark--head.png",
+  "rail--dark--main.png",
+  "rail--light--head.png",
+  "rail--light--main.png",
+  "rail-focus--dark--head.png",
+  "rail-focus--dark--main.png",
+  "rail-focus--light--head.png",
+  "rail-focus--light--main.png",
+  "unchanged--collapsible-sidebar--dark--head.png",
+  "unchanged--collapsible-sidebar--dark--main.png",
+  "unchanged--collapsible-sidebar--light--head.png",
+  "unchanged--collapsible-sidebar--light--main.png",
+  "unchanged--end-content--dark--head.png",
+  "unchanged--end-content--dark--main.png",
+  "unchanged--end-content--light--head.png",
+  "unchanged--end-content--light--main.png",
+  "unchanged--nested-items--dark--head.png",
+  "unchanged--nested-items--dark--main.png",
+  "unchanged--nested-items--light--head.png",
+  "unchanged--nested-items--light--main.png",
+  "rail-focus--light--head--zoom-top.png"
+ ]
+}
