@@ -1,0 +1,288 @@
+{
+ "browser": "Chromium 149.0.7827.55",
+ "story": "core-tableactivation--master-detail",
+ "injectTest": false,
+ "viewport": [
+  1280,
+  800
+ ],
+ "deviceScaleFactor": 2,
+ "frames": [
+  {
+   "name": "neutral--light--ltr",
+   "theme": "neutral",
+   "scheme": "light",
+   "dir": "ltr",
+   "forced": false,
+   "forcedColorsMatches": false,
+   "file": "neutral--light--ltr.png",
+   "sha256": "7d8f8ab65558d9652944d945330fda94a346a05a7097aceb342f59a875072793",
+   "rows": [
+    {
+     "index": 0,
+     "text": "API gatewayCoreHealthy2m agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    },
+    {
+     "index": 1,
+     "text": "Search indexInfraDegraded14m agoOpen",
+     "ariaCurrent": "true",
+     "dataActive": "true"
+    },
+    {
+     "index": 2,
+     "text": "Billing workerCoreHealthy1h agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    },
+    {
+     "index": 3,
+     "text": "Legacy importerInfraDown3d agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    }
+   ],
+   "activeIndex": 1,
+   "controlIndex": 0,
+   "active": {
+    "box": [
+     16,
+     97.5,
+     289.2,
+     45
+    ],
+    "boxShadow": "rgb(27, 27, 27) 3px 0px 0px 0px inset",
+    "outline": "none 3px rgb(0, 0, 0) offset 0px",
+    "direction": "ltr",
+    "backgroundColor": "rgba(0, 0, 0, 0)"
+   },
+   "control": {
+    "box": [
+     16,
+     52.5,
+     289.2,
+     45
+    ],
+    "boxShadow": "none",
+    "outline": "none 3px rgb(0, 0, 0) offset 0px",
+    "direction": "ltr",
+    "backgroundColor": "rgba(0, 0, 0, 0)"
+   },
+   "rowsWithAriaCurrent": 1,
+   "activeBar": {
+    "cellColour": "#F1F1F1",
+    "barColour": "#1B1B1B",
+    "barWidthDevicePx": 6,
+    "barWidthCssPx": 3,
+    "offsetFromLeadingEdgeCssPx": 0,
+    "contrastAgainstCell": 15.25,
+    "rowsCovered": 88,
+    "cellRows": 90,
+    "otherEdges": {
+     "trailing": {
+      "offsetCssPx": 12,
+      "widthCssPx": 0
+     },
+     "top": {
+      "offsetCssPx": 12,
+      "widthCssPx": 0
+     },
+     "bottom": {
+      "offsetCssPx": 12,
+      "widthCssPx": 0
+     }
+    }
+   },
+   "controlBar": {
+    "cellColour": "#FFFFFF",
+    "barWidthCssPx": 0
+   },
+   "errors": []
+  },
+  {
+   "name": "neutral--light--rtl",
+   "theme": "neutral",
+   "scheme": "light",
+   "dir": "rtl",
+   "forced": false,
+   "forcedColorsMatches": false,
+   "file": "neutral--light--rtl.png",
+   "sha256": "c49196cec025cb4b429559b2c0675fb7f1f11b1d33a8e928659b3bcb0ebaed2d",
+   "rows": [
+    {
+     "index": 0,
+     "text": "API gatewayCoreHealthy2m agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    },
+    {
+     "index": 1,
+     "text": "Search indexInfraDegraded14m agoOpen",
+     "ariaCurrent": "true",
+     "dataActive": "true"
+    },
+    {
+     "index": 2,
+     "text": "Billing workerCoreHealthy1h agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    },
+    {
+     "index": 3,
+     "text": "Legacy importerInfraDown3d agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    }
+   ],
+   "activeIndex": 1,
+   "controlIndex": 0,
+   "active": {
+    "box": [
+     974.8,
+     97.5,
+     289.2,
+     45
+    ],
+    "boxShadow": "rgb(27, 27, 27) -3px 0px 0px 0px inset",
+    "outline": "none 3px rgb(0, 0, 0) offset 0px",
+    "direction": "rtl",
+    "backgroundColor": "rgba(0, 0, 0, 0)"
+   },
+   "control": {
+    "box": [
+     974.8,
+     52.5,
+     289.2,
+     45
+    ],
+    "boxShadow": "none",
+    "outline": "none 3px rgb(0, 0, 0) offset 0px",
+    "direction": "rtl",
+    "backgroundColor": "rgba(0, 0, 0, 0)"
+   },
+   "rowsWithAriaCurrent": 1,
+   "activeBar": {
+    "cellColour": "#F1F1F1",
+    "barColour": "#1B1B1B",
+    "barWidthDevicePx": 6,
+    "barWidthCssPx": 3,
+    "offsetFromLeadingEdgeCssPx": 0,
+    "contrastAgainstCell": 15.25,
+    "rowsCovered": 88,
+    "cellRows": 90,
+    "otherEdges": {
+     "trailing": {
+      "offsetCssPx": 12,
+      "widthCssPx": 0
+     },
+     "top": {
+      "offsetCssPx": 12,
+      "widthCssPx": 0
+     },
+     "bottom": {
+      "offsetCssPx": 12,
+      "widthCssPx": 0
+     }
+    }
+   },
+   "controlBar": {
+    "cellColour": "#FFFFFF",
+    "barWidthCssPx": 0
+   },
+   "errors": []
+  },
+  {
+   "name": "forced-colors--neutral--light--ltr",
+   "theme": "neutral",
+   "scheme": "light",
+   "dir": "ltr",
+   "forced": true,
+   "forcedColorsMatches": true,
+   "file": "forced-colors--neutral--light--ltr.png",
+   "sha256": "743569d4a1f9749212ec63f1d8b7b55b2e916caf7b2e7be47dadb3ce4640f987",
+   "rows": [
+    {
+     "index": 0,
+     "text": "API gatewayCoreHealthy2m agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    },
+    {
+     "index": 1,
+     "text": "Search indexInfraDegraded14m agoOpen",
+     "ariaCurrent": "true",
+     "dataActive": "true"
+    },
+    {
+     "index": 2,
+     "text": "Billing workerCoreHealthy1h agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    },
+    {
+     "index": 3,
+     "text": "Legacy importerInfraDown3d agoOpen",
+     "ariaCurrent": null,
+     "dataActive": null
+    }
+   ],
+   "activeIndex": 1,
+   "controlIndex": 0,
+   "active": {
+    "box": [
+     16,
+     97.5,
+     289.2,
+     45
+    ],
+    "boxShadow": "none",
+    "outline": "solid 3px rgb(0, 0, 0) offset -3px",
+    "direction": "ltr",
+    "backgroundColor": "rgba(255, 255, 255, 0)"
+   },
+   "control": {
+    "box": [
+     16,
+     52.5,
+     289.2,
+     45
+    ],
+    "boxShadow": "none",
+    "outline": "none 3px rgb(0, 0, 0) offset 0px",
+    "direction": "ltr",
+    "backgroundColor": "rgba(255, 255, 255, 0)"
+   },
+   "rowsWithAriaCurrent": 1,
+   "activeBar": {
+    "cellColour": "#FFFFFF",
+    "barColour": "#000000",
+    "barWidthDevicePx": 6,
+    "barWidthCssPx": 3,
+    "offsetFromLeadingEdgeCssPx": 0,
+    "contrastAgainstCell": 21,
+    "rowsCovered": 90,
+    "cellRows": 90,
+    "otherEdges": {
+     "trailing": {
+      "offsetCssPx": 0,
+      "widthCssPx": 3
+     },
+     "top": {
+      "offsetCssPx": 0,
+      "widthCssPx": 3.5
+     },
+     "bottom": {
+      "offsetCssPx": 0,
+      "widthCssPx": 2.5
+     }
+    }
+   },
+   "controlBar": {
+    "cellColour": "#FFFFFF",
+    "barWidthCssPx": 0
+   },
+   "errors": []
+  }
+ ]
+}
