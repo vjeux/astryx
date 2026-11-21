@@ -1,0 +1,2694 @@
+{
+ "question": "#12457 at d492c143 against main 3d313c66 on iPhone Safari, at AX5: with the story root at 390 px, and right to left. Optional takes, not a merge gate.",
+ "device": {
+  "simulator": "iPhone 11 Simulator",
+  "ios": "26.2",
+  "browser": "Mobile Safari 26.2",
+  "viewportWidth": 414,
+  "dpr": 2,
+  "body": "53px"
+ },
+ "builds": {
+  "head": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+  "main": "3d313c666b6cc67e6610dd568581de295b940e64",
+  "takesReadingThem": 8
+ },
+ "method": {
+  "root390": "a bookmarklet sets the story root (#storybook-root) to 390 CSS px wide before the probe reads; the viewport stays 414 px; the stills are taken after it ran",
+  "rtl": "the story URL sets the Storybook direction global: globals=direction:rtl",
+  "ellipsisSide": "from the stills: each label's ink (luminance below 140) inside its label box and text line, split into connected parts (8-connected, 4 px or more); the ellipsis is three small parts (at most a fifth of the line height on each side, about square, in the lower half); its side is left when every dot ends left of every letter, right when every dot starts right of every letter",
+  "inkMaskDiff": "the label's ink mask on main against the head, aligned at the label box",
+  "stillMapping": "scale 2; the page area starts at x 2 (main half) or x 834 (head half) and y 46, from the track boxes"
+ },
+ "summary": {
+  "rtlSizeVariantLabels": 9,
+  "rtlDotsLeftMain": 9,
+  "rtlDotsLeftHead": 9,
+  "rtlDefaultLabelsWithoutEllipsis": 3,
+  "rtlInkMaskDiffMax": 6,
+  "rtlInkPixelsMin": 1772,
+  "rtlInkPixelsMax": 6106,
+  "w390Labels": 12,
+  "w390DotsRightMain": 12,
+  "w390DotsRightHead": 12,
+  "gateControlLabels": 9,
+  "gateControlDotsRight": 9,
+  "flagAgreesWithDots": 33,
+  "labelsChecked": 33,
+  "trackWidthAt390": [
+   358
+  ],
+  "trackWidthFullSizeVariants": 382,
+  "trackWidthFullDefault": 373.5,
+  "headSpillOptional": 0,
+  "mainSpillRange": [
+   17,
+   19.5
+  ]
+ },
+ "cells": [
+  {
+   "take": "w390",
+   "story": "default",
+   "variant": null,
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 24,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 19,
+   "ellipsis": [
+    "Grid",
+    "List",
+    "Table"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Grid",
+    "List",
+    "Table"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "w390",
+   "story": "default",
+   "variant": null,
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 74,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 0,
+   "ellipsis": [
+    "Grid",
+    "List",
+    "Table"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Grid",
+    "List",
+    "Table"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "w390",
+   "story": "size-variants",
+   "variant": "sm",
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 20,
+   "labelBox": 67,
+   "textLine": 58,
+   "fontSize": "47.384399",
+   "spillPastSegment": 19.5,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "w390",
+   "story": "size-variants",
+   "variant": "md",
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 24,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 19,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "w390",
+   "story": "size-variants",
+   "variant": "lg",
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 28,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 17,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "w390",
+   "story": "size-variants",
+   "variant": "sm",
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 67,
+   "labelBox": 67,
+   "textLine": 58,
+   "fontSize": "47.384399",
+   "spillPastSegment": 0,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "w390",
+   "story": "size-variants",
+   "variant": "md",
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 74,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 0,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "w390",
+   "story": "size-variants",
+   "variant": "lg",
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 358,
+   "segment": 74,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 0,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "right",
+   "leftToRight": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "default",
+   "variant": null,
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 373.5,
+   "segment": 24,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 19,
+   "ellipsis": [],
+   "ellipsisSide": null,
+   "leftToRight": [
+    "Table",
+    "List",
+    "Grid"
+   ],
+   "dotsPerLabel": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "default",
+   "variant": null,
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 373.5,
+   "segment": 74,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 0,
+   "ellipsis": [],
+   "ellipsisSide": null,
+   "leftToRight": [
+    "Table",
+    "List",
+    "Grid"
+   ],
+   "dotsPerLabel": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "size-variants",
+   "variant": "sm",
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 382,
+   "segment": 20,
+   "labelBox": 67,
+   "textLine": 58,
+   "fontSize": "47.384399",
+   "spillPastSegment": 19.5,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "left",
+   "leftToRight": [
+    "Month",
+    "Week",
+    "Day"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "size-variants",
+   "variant": "md",
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 382,
+   "segment": 24,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 19,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "left",
+   "leftToRight": [
+    "Month",
+    "Week",
+    "Day"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "size-variants",
+   "variant": "lg",
+   "build": "main",
+   "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "body": "53px",
+   "trackWidth": 382,
+   "segment": 28,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 17,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "left",
+   "leftToRight": [
+    "Month",
+    "Week",
+    "Day"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "size-variants",
+   "variant": "sm",
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 382,
+   "segment": 67,
+   "labelBox": 67,
+   "textLine": 58,
+   "fontSize": "47.384399",
+   "spillPastSegment": 0,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "left",
+   "leftToRight": [
+    "Month",
+    "Week",
+    "Day"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "size-variants",
+   "variant": "md",
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 382,
+   "segment": 74,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 0,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "left",
+   "leftToRight": [
+    "Month",
+    "Week",
+    "Day"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "take": "rtl",
+   "story": "size-variants",
+   "variant": "lg",
+   "build": "head",
+   "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "body": "53px",
+   "trackWidth": 382,
+   "segment": 74,
+   "labelBox": 74,
+   "textLine": 61,
+   "fontSize": "49.881599",
+   "spillPastSegment": 0,
+   "ellipsis": [
+    "Day",
+    "Week",
+    "Month"
+   ],
+   "ellipsisSide": "left",
+   "leftToRight": [
+    "Month",
+    "Week",
+    "Day"
+   ],
+   "dotsPerLabel": [
+    3,
+    3,
+    3
+   ]
+  }
+ ],
+ "ellipsis": [
+  {
+   "still": "12457-opt-rtl-default.png",
+   "take": "AX5-rtl-default",
+   "group": 0,
+   "label": "Grid",
+   "main": {
+    "dots": 0,
+    "side": null,
+    "ellipsisFlag": false
+   },
+   "head": {
+    "dots": 0,
+    "side": null,
+    "ellipsisFlag": false
+   },
+   "inkPixels": {
+    "main": 5824,
+    "head": 5821
+   },
+   "inkMaskDifferingPixels": 3
+  },
+  {
+   "still": "12457-opt-rtl-default.png",
+   "take": "AX5-rtl-default",
+   "group": 0,
+   "label": "List",
+   "main": {
+    "dots": 0,
+    "side": null,
+    "ellipsisFlag": false
+   },
+   "head": {
+    "dots": 0,
+    "side": null,
+    "ellipsisFlag": false
+   },
+   "inkPixels": {
+    "main": 3641,
+    "head": 3642
+   },
+   "inkMaskDifferingPixels": 1
+  },
+  {
+   "still": "12457-opt-rtl-default.png",
+   "take": "AX5-rtl-default",
+   "group": 0,
+   "label": "Table",
+   "main": {
+    "dots": 0,
+    "side": null,
+    "ellipsisFlag": false
+   },
+   "head": {
+    "dots": 0,
+    "side": null,
+    "ellipsisFlag": false
+   },
+   "inkPixels": {
+    "main": 6101,
+    "head": 6106
+   },
+   "inkMaskDifferingPixels": 5
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 0,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 1776,
+    "head": 1772
+   },
+   "inkMaskDifferingPixels": 4
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 0,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3874,
+    "head": 3874
+   },
+   "inkMaskDifferingPixels": 0
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 0,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4658,
+    "head": 4660
+   },
+   "inkMaskDifferingPixels": 2
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 1,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 1952,
+    "head": 1949
+   },
+   "inkMaskDifferingPixels": 3
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 1,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3011,
+    "head": 3015
+   },
+   "inkMaskDifferingPixels": 4
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 1,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3870,
+    "head": 3876
+   },
+   "inkMaskDifferingPixels": 6
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 2,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 1954,
+    "head": 1949
+   },
+   "inkMaskDifferingPixels": 5
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 2,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3015,
+    "head": 3015
+   },
+   "inkMaskDifferingPixels": 0
+  },
+  {
+   "still": "12457-opt-rtl-size-variants.png",
+   "take": "AX5-rtl-size-variants",
+   "group": 2,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "left",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3876,
+    "head": 3876
+   },
+   "inkMaskDifferingPixels": 0
+  },
+  {
+   "still": "12457-opt-w390-default.png",
+   "take": "AX5-w390-default",
+   "group": 0,
+   "label": "Grid",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3521,
+    "head": 3517
+   },
+   "inkMaskDifferingPixels": 4
+  },
+  {
+   "still": "12457-opt-w390-default.png",
+   "take": "AX5-w390-default",
+   "group": 0,
+   "label": "List",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 1979,
+    "head": 1983
+   },
+   "inkMaskDifferingPixels": 4
+  },
+  {
+   "still": "12457-opt-w390-default.png",
+   "take": "AX5-w390-default",
+   "group": 0,
+   "label": "Table",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4440,
+    "head": 4445
+   },
+   "inkMaskDifferingPixels": 5
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 0,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2518,
+    "head": 2505
+   },
+   "inkMaskDifferingPixels": 13
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 0,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3752,
+    "head": 3755
+   },
+   "inkMaskDifferingPixels": 3
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 0,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3685,
+    "head": 3686
+   },
+   "inkMaskDifferingPixels": 1
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 1,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2782,
+    "head": 2765
+   },
+   "inkMaskDifferingPixels": 17
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 1,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2848,
+    "head": 2852
+   },
+   "inkMaskDifferingPixels": 4
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 1,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4033,
+    "head": 4039
+   },
+   "inkMaskDifferingPixels": 6
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 2,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2772,
+    "head": 2765
+   },
+   "inkMaskDifferingPixels": 7
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 2,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2852,
+    "head": 2852
+   },
+   "inkMaskDifferingPixels": 0
+  },
+  {
+   "still": "12457-opt-w390-size-variants.png",
+   "take": "AX5-w390-size-variants",
+   "group": 2,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4039,
+    "head": 4039
+   },
+   "inkMaskDifferingPixels": 0
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 0,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2518,
+    "head": 2505
+   },
+   "inkMaskDifferingPixels": 13
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 0,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 3752,
+    "head": 3755
+   },
+   "inkMaskDifferingPixels": 3
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 0,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4800,
+    "head": 4801
+   },
+   "inkMaskDifferingPixels": 1
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 1,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2782,
+    "head": 2765
+   },
+   "inkMaskDifferingPixels": 17
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 1,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4165,
+    "head": 4169
+   },
+   "inkMaskDifferingPixels": 4
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 1,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4033,
+    "head": 4039
+   },
+   "inkMaskDifferingPixels": 6
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 2,
+   "label": "Day",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 2772,
+    "head": 2765
+   },
+   "inkMaskDifferingPixels": 7
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 2,
+   "label": "Week",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4169,
+    "head": 4169
+   },
+   "inkMaskDifferingPixels": 0
+  },
+  {
+   "still": "12457-size-variants-ax5.png",
+   "take": "gate-size-variants",
+   "group": 2,
+   "label": "Month",
+   "main": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "head": {
+    "dots": 3,
+    "side": "right",
+    "ellipsisFlag": true
+   },
+   "inkPixels": {
+    "main": 4039,
+    "head": 4039
+   },
+   "inkMaskDifferingPixels": 0
+  }
+ ],
+ "stills": [
+  {
+   "file": "12457-opt-w390-default.png",
+   "kept": "IHDR cHRM bKGD IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-opt-w390-size-variants.png",
+   "kept": "IHDR cHRM bKGD IDAT IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-opt-rtl-default.png",
+   "kept": "IHDR cHRM bKGD IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-opt-rtl-size-variants.png",
+   "kept": "IHDR cHRM bKGD IDAT IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  }
+ ],
+ "takes": {
+  "AX5-rtl-head-default": {
+   "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story&globals=direction%3Artl",
+   "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      24.53,
+      16,
+      373.47,
+      82
+     ],
+     "segs": [
+      {
+       "t": "Grid",
+       "seg": [
+        275.05,
+        20,
+        118.95,
+        74
+       ],
+       "lab": [
+        287.05,
+        20,
+        94.95,
+        74
+       ],
+       "line": [
+        26,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": false,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "List",
+       "seg": [
+        170.39,
+        20,
+        102.66,
+        74
+       ],
+       "lab": [
+        182.39,
+        20,
+        78.66,
+        74
+       ],
+       "line": [
+        26,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": false,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Table",
+       "seg": [
+        28.53,
+        20,
+        139.86,
+        74
+       ],
+       "lab": [
+        40.53,
+        20,
+        115.86,
+        74
+       ],
+       "line": [
+        26,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": false,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      }
+     ]
+    }
+   ]
+  },
+  "AX5-rtl-head-size-variants": {
+   "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story&globals=direction%3Artl",
+   "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      16,
+      42,
+      382,
+      75
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        297.63,
+        46,
+        96.38,
+        67
+       ],
+       "lab": [
+        305.63,
+        46,
+        80.38,
+        67
+       ],
+       "line": [
+        50,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -4,
+       "spillBot": -5
+      },
+      {
+       "t": "Week",
+       "seg": [
+        167.27,
+        46,
+        128.36,
+        67
+       ],
+       "lab": [
+        175.27,
+        46,
+        112.36,
+        67
+       ],
+       "line": [
+        50,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -4,
+       "spillBot": -5
+      },
+      {
+       "t": "Month",
+       "seg": [
+        19.98,
+        46,
+        145.28,
+        67
+       ],
+       "lab": [
+        27.98,
+        46,
+        129.28,
+        67
+       ],
+       "line": [
+        50,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -4,
+       "spillBot": -5
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      167,
+      382,
+      82
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        295.63,
+        171,
+        98.38,
+        74
+       ],
+       "lab": [
+        307.63,
+        171,
+        74.38,
+        74
+       ],
+       "line": [
+        177,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Week",
+       "seg": [
+        165.64,
+        171,
+        127.98,
+        74
+       ],
+       "lab": [
+        177.64,
+        171,
+        103.98,
+        74
+       ],
+       "line": [
+        177,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Month",
+       "seg": [
+        20,
+        171,
+        143.64,
+        74
+       ],
+       "lab": [
+        32,
+        171,
+        119.64,
+        74
+       ],
+       "line": [
+        177,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      299,
+      382,
+      82
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        295.63,
+        303,
+        98.38,
+        74
+       ],
+       "lab": [
+        307.63,
+        303,
+        74.38,
+        74
+       ],
+       "line": [
+        309,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Week",
+       "seg": [
+        165.64,
+        303,
+        127.98,
+        74
+       ],
+       "lab": [
+        177.64,
+        303,
+        103.98,
+        74
+       ],
+       "line": [
+        309,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Month",
+       "seg": [
+        20,
+        303,
+        143.64,
+        74
+       ],
+       "lab": [
+        32,
+        303,
+        119.64,
+        74
+       ],
+       "line": [
+        309,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      }
+     ]
+    }
+   ]
+  },
+  "AX5-rtl-main-default": {
+   "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story&globals=direction%3Artl",
+   "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      24.53,
+      37,
+      373.47,
+      32
+     ],
+     "segs": [
+      {
+       "t": "Grid",
+       "seg": [
+        275.05,
+        41,
+        118.95,
+        24
+       ],
+       "lab": [
+        287.05,
+        16,
+        94.95,
+        74
+       ],
+       "line": [
+        22,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": false,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "List",
+       "seg": [
+        170.39,
+        41,
+        102.66,
+        24
+       ],
+       "lab": [
+        182.39,
+        16,
+        78.66,
+        74
+       ],
+       "line": [
+        22,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": false,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "Table",
+       "seg": [
+        28.53,
+        41,
+        139.86,
+        24
+       ],
+       "lab": [
+        40.53,
+        16,
+        115.86,
+        74
+       ],
+       "line": [
+        22,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": false,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      }
+     ]
+    }
+   ]
+  },
+  "AX5-rtl-main-size-variants": {
+   "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story&globals=direction%3Artl",
+   "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      16,
+      66,
+      382,
+      28
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        297.63,
+        70,
+        96.38,
+        20
+       ],
+       "lab": [
+        305.63,
+        46.5,
+        80.38,
+        67
+       ],
+       "line": [
+        50.5,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19.5,
+       "spillBot": 18.5
+      },
+      {
+       "t": "Week",
+       "seg": [
+        167.27,
+        70,
+        128.36,
+        20
+       ],
+       "lab": [
+        175.27,
+        46.5,
+        112.36,
+        67
+       ],
+       "line": [
+        50.5,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19.5,
+       "spillBot": 18.5
+      },
+      {
+       "t": "Month",
+       "seg": [
+        19.98,
+        70,
+        145.28,
+        20
+       ],
+       "lab": [
+        27.98,
+        46.5,
+        129.28,
+        67
+       ],
+       "line": [
+        50.5,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19.5,
+       "spillBot": 18.5
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      187,
+      382,
+      32
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        295.63,
+        191,
+        98.38,
+        24
+       ],
+       "lab": [
+        307.63,
+        166,
+        74.38,
+        74
+       ],
+       "line": [
+        172,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "Week",
+       "seg": [
+        165.64,
+        191,
+        127.98,
+        24
+       ],
+       "lab": [
+        177.64,
+        166,
+        103.98,
+        74
+       ],
+       "line": [
+        172,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "Month",
+       "seg": [
+        20,
+        191,
+        143.64,
+        24
+       ],
+       "lab": [
+        32,
+        166,
+        119.64,
+        74
+       ],
+       "line": [
+        172,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      309,
+      382,
+      36
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        295.63,
+        313,
+        98.38,
+        28
+       ],
+       "lab": [
+        307.63,
+        290,
+        74.38,
+        74
+       ],
+       "line": [
+        296,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 17,
+       "spillBot": 16
+      },
+      {
+       "t": "Week",
+       "seg": [
+        165.64,
+        313,
+        127.98,
+        28
+       ],
+       "lab": [
+        177.64,
+        290,
+        103.98,
+        74
+       ],
+       "line": [
+        296,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 17,
+       "spillBot": 16
+      },
+      {
+       "t": "Month",
+       "seg": [
+        20,
+        313,
+        143.64,
+        28
+       ],
+       "lab": [
+        32,
+        290,
+        119.64,
+        74
+       ],
+       "line": [
+        296,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 17,
+       "spillBot": 16
+      }
+     ]
+    }
+   ]
+  },
+  "AX5-w390-head-default": {
+   "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+   "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      16,
+      16,
+      358,
+      82
+     ],
+     "segs": [
+      {
+       "t": "Grid",
+       "seg": [
+        20,
+        20,
+        113.88,
+        74
+       ],
+       "lab": [
+        32,
+        20,
+        89.88,
+        74
+       ],
+       "line": [
+        26,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "List",
+       "seg": [
+        135.88,
+        20,
+        98.45,
+        74
+       ],
+       "lab": [
+        147.88,
+        20,
+        74.45,
+        74
+       ],
+       "line": [
+        26,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Table",
+       "seg": [
+        236.33,
+        20,
+        133.67,
+        74
+       ],
+       "lab": [
+        248.33,
+        20,
+        109.67,
+        74
+       ],
+       "line": [
+        26,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      }
+     ]
+    }
+   ]
+  },
+  "AX5-w390-head-size-variants": {
+   "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+   "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      16,
+      42,
+      358,
+      75
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        20,
+        46,
+        90.38,
+        67
+       ],
+       "lab": [
+        28,
+        46,
+        74.38,
+        67
+       ],
+       "line": [
+        50,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -4,
+       "spillBot": -5
+      },
+      {
+       "t": "Week",
+       "seg": [
+        112.38,
+        46,
+        119.98,
+        67
+       ],
+       "lab": [
+        120.38,
+        46,
+        103.98,
+        67
+       ],
+       "line": [
+        50,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -4,
+       "spillBot": -5
+      },
+      {
+       "t": "Month",
+       "seg": [
+        234.36,
+        46,
+        135.64,
+        67
+       ],
+       "lab": [
+        242.36,
+        46,
+        119.64,
+        67
+       ],
+       "line": [
+        50,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -4,
+       "spillBot": -5
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      167,
+      358,
+      82
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        20,
+        171,
+        92.39,
+        74
+       ],
+       "lab": [
+        32,
+        171,
+        68.39,
+        74
+       ],
+       "line": [
+        177,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Week",
+       "seg": [
+        114.39,
+        171,
+        119.61,
+        74
+       ],
+       "lab": [
+        126.39,
+        171,
+        95.61,
+        74
+       ],
+       "line": [
+        177,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Month",
+       "seg": [
+        236,
+        171,
+        134,
+        74
+       ],
+       "lab": [
+        248,
+        171,
+        110,
+        74
+       ],
+       "line": [
+        177,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      299,
+      358,
+      82
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        20,
+        303,
+        92.39,
+        74
+       ],
+       "lab": [
+        32,
+        303,
+        68.39,
+        74
+       ],
+       "line": [
+        309,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Week",
+       "seg": [
+        114.39,
+        303,
+        119.61,
+        74
+       ],
+       "lab": [
+        126.39,
+        303,
+        95.61,
+        74
+       ],
+       "line": [
+        309,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      },
+      {
+       "t": "Month",
+       "seg": [
+        236,
+        303,
+        134,
+        74
+       ],
+       "lab": [
+        248,
+        303,
+        110,
+        74
+       ],
+       "line": [
+        309,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": -6,
+       "spillBot": -7
+      }
+     ]
+    }
+   ]
+  },
+  "AX5-w390-main-default": {
+   "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+   "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      16,
+      37,
+      358,
+      32
+     ],
+     "segs": [
+      {
+       "t": "Grid",
+       "seg": [
+        20,
+        41,
+        113.88,
+        24
+       ],
+       "lab": [
+        32,
+        16,
+        89.88,
+        74
+       ],
+       "line": [
+        22,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "List",
+       "seg": [
+        135.88,
+        41,
+        98.45,
+        24
+       ],
+       "lab": [
+        147.88,
+        16,
+        74.45,
+        74
+       ],
+       "line": [
+        22,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "Table",
+       "seg": [
+        236.33,
+        41,
+        133.67,
+        24
+       ],
+       "lab": [
+        248.33,
+        16,
+        109.67,
+        74
+       ],
+       "line": [
+        22,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      }
+     ]
+    }
+   ]
+  },
+  "AX5-w390-main-size-variants": {
+   "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+   "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+   "bf": "53px",
+   "iw": 414,
+   "ih": 689,
+   "dpr": 2,
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+   "G": [
+    {
+     "track": [
+      16,
+      66,
+      358,
+      28
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        20,
+        70,
+        90.38,
+        20
+       ],
+       "lab": [
+        28,
+        46.5,
+        74.38,
+        67
+       ],
+       "line": [
+        50.5,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19.5,
+       "spillBot": 18.5
+      },
+      {
+       "t": "Week",
+       "seg": [
+        112.38,
+        70,
+        119.98,
+        20
+       ],
+       "lab": [
+        120.38,
+        46.5,
+        103.98,
+        67
+       ],
+       "line": [
+        50.5,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19.5,
+       "spillBot": 18.5
+      },
+      {
+       "t": "Month",
+       "seg": [
+        234.36,
+        70,
+        135.64,
+        20
+       ],
+       "lab": [
+        242.36,
+        46.5,
+        119.64,
+        67
+       ],
+       "line": [
+        50.5,
+        58
+       ],
+       "fs": "47.384399px",
+       "lh": "67.693352px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19.5,
+       "spillBot": 18.5
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      187,
+      358,
+      32
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        20,
+        191,
+        92.39,
+        24
+       ],
+       "lab": [
+        32,
+        166,
+        68.39,
+        74
+       ],
+       "line": [
+        172,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "Week",
+       "seg": [
+        114.39,
+        191,
+        119.61,
+        24
+       ],
+       "lab": [
+        126.39,
+        166,
+        95.61,
+        74
+       ],
+       "line": [
+        172,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      },
+      {
+       "t": "Month",
+       "seg": [
+        236,
+        191,
+        134,
+        24
+       ],
+       "lab": [
+        248,
+        166,
+        110,
+        74
+       ],
+       "line": [
+        172,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 19,
+       "spillBot": 18
+      }
+     ]
+    },
+    {
+     "track": [
+      16,
+      309,
+      358,
+      36
+     ],
+     "segs": [
+      {
+       "t": "Day",
+       "seg": [
+        20,
+        313,
+        92.39,
+        28
+       ],
+       "lab": [
+        32,
+        290,
+        68.39,
+        74
+       ],
+       "line": [
+        296,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 17,
+       "spillBot": 16
+      },
+      {
+       "t": "Week",
+       "seg": [
+        114.39,
+        313,
+        119.61,
+        28
+       ],
+       "lab": [
+        126.39,
+        290,
+        95.61,
+        74
+       ],
+       "line": [
+        296,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 17,
+       "spillBot": 16
+      },
+      {
+       "t": "Month",
+       "seg": [
+        236,
+        313,
+        134,
+        28
+       ],
+       "lab": [
+        248,
+        290,
+        110,
+        74
+       ],
+       "line": [
+        296,
+        61
+       ],
+       "fs": "49.881599px",
+       "lh": "74.822395px",
+       "ell": true,
+       "ov": "visible",
+       "spillTop": 17,
+       "spillBot": 16
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

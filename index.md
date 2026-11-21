@@ -121,3 +121,75 @@ AX5 main core-segmentedcontrol--size-variants -> 3d313c666b6cc67e6610dd568581de2
 AX5 head core-segmentedcontrol--default -> d492c14372604dc8950a2f03ae56bd3ed28b6f5c (pref read back: UICTContentSizeCategoryAccessibilityXXXL)
 AX5 head core-segmentedcontrol--size-variants -> d492c14372604dc8950a2f03ae56bd3ed28b6f5c (pref read back: UICTContentSizeCategoryAccessibilityXXXL)
 ```
+
+## Optional takes (not a merge gate)
+
+- Two more takes at AX5, on the same device and builds: the story root at 390 px, and right to left. They are not part of the merge gate above.
+- Story root at 390 px: a bookmarklet sets the story root (`#storybook-root`) to 390 CSS px before the probe reads. The viewport stays 414 px.
+- Each track then measures 358 px wide. At full width, the tracks measure 382 px in the size variants and 373.5 px in the Default story.
+- Right to left: the story URL sets the Storybook direction global (`globals=direction:rtl`).
+- All 8 takes read the in-page body at 53px, and the builds d492c143 and 3d313c66 from their version.json files.
+
+### Answer (test)
+
+- At the 390 px root, the head's segments grow as at full width. They are 74 px in the Default story, and 67 / 74 / 74 px for sm / md / lg.
+- Main's segments stay 24 px, and 20 / 24 / 28 px. The label's line box passes them by 17 to 19.5 px.
+- At the 390 px root, every label ends in an ellipsis on both builds, in both stories. At full width, the Default story's labels are whole.
+- On the head, no label's line box passes its segment, in either optional take.
+- Right to left, both builds mirror the order: Table, List, Grid from the left, and Month, Week, Day from the left.
+- Right to left, the Default story's labels are whole on both builds. Every size variant's label ends in an ellipsis, as left to right.
+- Right to left, the ellipsis sits at the left of each Latin label, on both builds. At sm the labels show "…y", "…eek" and "…onth"; at md and lg, "…y", "…ek" and "…nth". So the end of each word stays visible.
+- That is the same on main and on the head, so this pull request does not cause it.
+- CSS puts the ellipsis at the end edge of a line, and a right-to-left line ends at its left edge.
+
+### How the ellipsis side was checked (test)
+
+- The side comes from the stills. Each label's ink inside its label box is split into connected parts.
+- The ellipsis is three small parts near the baseline. Right to left, all three sit left of every letter, in 9 of 9 labels on each build.
+- At the 390 px root, they sit right of every letter, in 12 of 12 labels on each build.
+- As a control, the left-to-right AX5 still above gives the same: right, in 9 of 9 labels on each build.
+- The probes' ellipsis flag agrees with the dots found, in 33 of 33 labels on each build.
+- Right to left, each label's ink differs between main and head in at most 6 px, out of 1772 to 6106 ink px. So both builds draw the text the same.
+
+### Per cell (test)
+
+| Take | Story | Build | Segment height, px | Label box / text line, px | Font size, px | The label's line box past the segment | Ellipsis | Ellipsis side | Items from left to right |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Story root 390 px | Default | main | 24 | 74 / 61 | 49.881599 | 19 px | Grid, List, Table | right | Grid · List · Table |
+| Story root 390 px | Default | head | 74 | 74 / 61 | 49.881599 | none | Grid, List, Table | right | Grid · List · Table |
+| Story root 390 px | Size variants, sm | main | 20 | 67 / 58 | 47.384399 | 19.5 px | Day, Week, Month | right | Day · Week · Month |
+| Story root 390 px | Size variants, md | main | 24 | 74 / 61 | 49.881599 | 19 px | Day, Week, Month | right | Day · Week · Month |
+| Story root 390 px | Size variants, lg | main | 28 | 74 / 61 | 49.881599 | 17 px | Day, Week, Month | right | Day · Week · Month |
+| Story root 390 px | Size variants, sm | head | 67 | 67 / 58 | 47.384399 | none | Day, Week, Month | right | Day · Week · Month |
+| Story root 390 px | Size variants, md | head | 74 | 74 / 61 | 49.881599 | none | Day, Week, Month | right | Day · Week · Month |
+| Story root 390 px | Size variants, lg | head | 74 | 74 / 61 | 49.881599 | none | Day, Week, Month | right | Day · Week · Month |
+| Right to left | Default | main | 24 | 74 / 61 | 49.881599 | 19 px | none | - | Table · List · Grid |
+| Right to left | Default | head | 74 | 74 / 61 | 49.881599 | none | none | - | Table · List · Grid |
+| Right to left | Size variants, sm | main | 20 | 67 / 58 | 47.384399 | 19.5 px | Day, Week, Month | left | Month · Week · Day |
+| Right to left | Size variants, md | main | 24 | 74 / 61 | 49.881599 | 19 px | Day, Week, Month | left | Month · Week · Day |
+| Right to left | Size variants, lg | main | 28 | 74 / 61 | 49.881599 | 17 px | Day, Week, Month | left | Month · Week · Day |
+| Right to left | Size variants, sm | head | 67 | 67 / 58 | 47.384399 | none | Day, Week, Month | left | Month · Week · Day |
+| Right to left | Size variants, md | head | 74 | 74 / 61 | 49.881599 | none | Day, Week, Month | left | Month · Week · Day |
+| Right to left | Size variants, lg | head | 74 | 74 / 61 | 49.881599 | none | Day, Week, Month | left | Month · Week · Day |
+
+- The line box past the segment is the larger of its overhangs past the segment's top and bottom edges.
+
+### Stills
+
+- `12457-opt-w390-default.png` and `12457-opt-w390-size-variants.png`: the story root at 390 px.
+- `12457-opt-rtl-default.png` and `12457-opt-rtl-size-variants.png`: right to left.
+- Main is on the left and the head on the right, as above. The stills keep their pixels; only their tIME and caNv chunks are removed.
+- `measurements-optional.json` holds the probes, the cells and the ellipsis readings.
+
+### Per take
+
+```
+AX5 rtl head core-segmentedcontrol--default -> d492c14372604dc8950a2f03ae56bd3ed28b6f5c (in-page body 53px)
+AX5 rtl head core-segmentedcontrol--size-variants -> d492c14372604dc8950a2f03ae56bd3ed28b6f5c (in-page body 53px)
+AX5 rtl main core-segmentedcontrol--default -> 3d313c666b6cc67e6610dd568581de295b940e64 (in-page body 53px)
+AX5 rtl main core-segmentedcontrol--size-variants -> 3d313c666b6cc67e6610dd568581de295b940e64 (in-page body 53px)
+AX5 root-390px head core-segmentedcontrol--default -> d492c14372604dc8950a2f03ae56bd3ed28b6f5c (in-page body 53px)
+AX5 root-390px head core-segmentedcontrol--size-variants -> d492c14372604dc8950a2f03ae56bd3ed28b6f5c (in-page body 53px)
+AX5 root-390px main core-segmentedcontrol--default -> 3d313c666b6cc67e6610dd568581de295b940e64 (in-page body 53px)
+AX5 root-390px main core-segmentedcontrol--size-variants -> 3d313c666b6cc67e6610dd568581de295b940e64 (in-page body 53px)
+```
