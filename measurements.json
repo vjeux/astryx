@@ -1,0 +1,9357 @@
+{
+ "question": "#12457 at d492c143 against main on iPhone Safari: do the segments grow with Dynamic Type, so the labels stay inside them?",
+ "device": {
+  "simulator": "iPhone 11 Simulator",
+  "runtime": "iPhone 11.iOS 26.2",
+  "ios": "26.2",
+  "screen": "414 x 896 pt",
+  "scale": "2x",
+  "browser": "Mobile Safari 26.2"
+ },
+ "dynamicType": {
+  "preference": "com.apple.UIKit UIPreferredContentSizeCategoryName",
+  "sizes": {
+   "Default": "UICTContentSizeCategoryL",
+   "AX3": "UICTContentSizeCategoryAccessibilityXL",
+   "AX4": "UICTContentSizeCategoryAccessibilityXXL",
+   "AX5": "UICTContentSizeCategoryAccessibilityXXXL"
+  },
+  "readBackEqualsSet": 16
+ },
+ "builds": {
+  "head": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+  "main": "3d313c666b6cc67e6610dd568581de295b940e64",
+  "mainTakesReadingIt": 8,
+  "mergeBase": "facdcb9aebebf7ec847c3c135508f6aa861711ea",
+  "mainCommitsPastMergeBase": 2,
+  "mainPastMergeBaseTouches": {
+   "segmentedControl": false,
+   "layer": false
+  }
+ },
+ "changedSince": {
+  "base": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+  "head": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+  "commits": 62,
+  "files": 589,
+  "segmentedControlChanged": false,
+  "layer": {
+   "file": "packages/core/src/Layer/useLayer.tsx",
+   "linesAdded": 128,
+   "linesRemoved": 76,
+   "commit": "0b72d7605b",
+   "subject": "feat(usePopover): tabBehavior lets Tab pass through a popover (#11156)"
+  }
+ },
+ "repeatOf872843fa": {
+  "rounding": "0.1 px",
+  "compared": "per segment: segment height, label box height, text line height and ellipsis flag",
+  "pairs": "head 872843fa against head d492c143; main at each 872843fa take against main 3d313c66",
+  "cells": 16,
+  "identical": 16,
+  "spillTopAndBottomMatch": {
+   "segments": 96,
+   "matching": 96
+  },
+  "perCell": [
+   {
+    "size": "L",
+    "story": "core-segmentedcontrol--default",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "L",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "L",
+    "story": "core-segmentedcontrol--default",
+    "build": "main",
+    "take872843fa": {
+     "commit": "fb4f89469bf81756138775a1b7d65600fc939b0c",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "L",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "main",
+    "take872843fa": {
+     "commit": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 20,
+        "textLine": 18,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 24,
+        "textLine": 20,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX3",
+    "story": "core-segmentedcontrol--default",
+    "build": "main",
+    "take872843fa": {
+     "commit": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX3",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "main",
+    "take872843fa": {
+     "commit": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX3",
+    "story": "core-segmentedcontrol--default",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX3",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 50,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 50,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 50,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 50,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 50,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 50,
+        "labelBox": 50,
+        "textLine": 43,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 56,
+        "labelBox": 56,
+        "textLine": 46,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX4",
+    "story": "core-segmentedcontrol--default",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX4",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 58,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 58,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 58,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 58,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 58,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 58,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 66,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX4",
+    "story": "core-segmentedcontrol--default",
+    "build": "main",
+    "take872843fa": {
+     "commit": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX4",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "main",
+    "take872843fa": {
+     "commit": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 58,
+        "textLine": 49,
+        "ellipsis": false
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 66,
+        "textLine": 54,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX5",
+    "story": "core-segmentedcontrol--default",
+    "build": "main",
+    "take872843fa": {
+     "commit": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX5",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "main",
+    "take872843fa": {
+     "commit": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "3d313c666b6cc67e6610dd568581de295b940e64",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 20,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 20,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 20,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 24,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 28,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 28,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 28,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX5",
+    "story": "core-segmentedcontrol--default",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Grid",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "List",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       },
+       {
+        "label": "Table",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": false
+       }
+      ]
+     ]
+    },
+    "identical": true
+   },
+   {
+    "size": "AX5",
+    "story": "core-segmentedcontrol--size-variants",
+    "build": "head",
+    "take872843fa": {
+     "commit": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 67,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 67,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 67,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "thisTake": {
+     "commit": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+     "cell": [
+      [
+       {
+        "label": "Day",
+        "segment": 67,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 67,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 67,
+        "labelBox": 67,
+        "textLine": 58,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ],
+      [
+       {
+        "label": "Day",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Week",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       },
+       {
+        "label": "Month",
+        "segment": 74,
+        "labelBox": 74,
+        "textLine": 61,
+        "ellipsis": true
+       }
+      ]
+     ]
+    },
+    "identical": true
+   }
+  ]
+ },
+ "take872843fa": {
+  "head": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+  "mainPerTake": {
+   "L core-segmentedcontrol--default": "fb4f89469bf81756138775a1b7d65600fc939b0c",
+   "L core-segmentedcontrol--size-variants": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+   "AX3 core-segmentedcontrol--default": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+   "AX3 core-segmentedcontrol--size-variants": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+   "AX4 core-segmentedcontrol--default": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+   "AX4 core-segmentedcontrol--size-variants": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+   "AX5 core-segmentedcontrol--default": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+   "AX5 core-segmentedcontrol--size-variants": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3"
+  },
+  "takes": [
+   {
+    "size": "L",
+    "build": "head",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryL",
+    "prefReadback": "UICTContentSizeCategoryL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "17px",
+     "iw": 414,
+     "ih": 750,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        16,
+        182.66,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          20,
+          56.13,
+          24
+         ],
+         "lab": [
+          32,
+          20,
+          32.13,
+          24
+         ],
+         "line": [
+          22,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "List",
+         "seg": [
+          78.13,
+          20,
+          50.77,
+          24
+         ],
+         "lab": [
+          90.13,
+          20,
+          26.77,
+          24
+         ],
+         "line": [
+          22,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "Table",
+         "seg": [
+          130.89,
+          20,
+          63.77,
+          24
+         ],
+         "lab": [
+          142.89,
+          20,
+          39.77,
+          24
+         ],
+         "line": [
+          22,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "L",
+    "build": "head",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryL",
+    "prefReadback": "UICTContentSizeCategoryL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "17px",
+     "iw": 414,
+     "ih": 750,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        42,
+        164.58,
+        28
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          46,
+          41.83,
+          20
+         ],
+         "lab": [
+          28,
+          46,
+          25.83,
+          20
+         ],
+         "line": [
+          47,
+          18
+         ],
+         "fs": "14px",
+         "lh": "20.000401px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -1,
+         "spillBot": -1
+        },
+        {
+         "t": "Week",
+         "seg": [
+          63.83,
+          46,
+          52.56,
+          20
+         ],
+         "lab": [
+          71.83,
+          46,
+          36.56,
+          20
+         ],
+         "line": [
+          47,
+          18
+         ],
+         "fs": "14px",
+         "lh": "20.000401px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -1,
+         "spillBot": -1
+        },
+        {
+         "t": "Month",
+         "seg": [
+          118.39,
+          46,
+          58.19,
+          20
+         ],
+         "lab": [
+          126.39,
+          46,
+          42.19,
+          20
+         ],
+         "line": [
+          47,
+          18
+         ],
+         "fs": "14px",
+         "lh": "20.000401px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -1,
+         "spillBot": -1
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        120,
+        201.81,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          124,
+          53.09,
+          24
+         ],
+         "lab": [
+          32,
+          124,
+          29.09,
+          24
+         ],
+         "line": [
+          126,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "Week",
+         "seg": [
+          75.09,
+          124,
+          65.22,
+          24
+         ],
+         "lab": [
+          87.09,
+          124,
+          41.22,
+          24
+         ],
+         "line": [
+          126,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "Month",
+         "seg": [
+          142.31,
+          124,
+          71.5,
+          24
+         ],
+         "lab": [
+          154.31,
+          124,
+          47.5,
+          24
+         ],
+         "line": [
+          126,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        202,
+        201.81,
+        36
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          206,
+          53.09,
+          28
+         ],
+         "lab": [
+          32,
+          208,
+          29.09,
+          24
+         ],
+         "line": [
+          210,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -4
+        },
+        {
+         "t": "Week",
+         "seg": [
+          75.09,
+          206,
+          65.22,
+          28
+         ],
+         "lab": [
+          87.09,
+          208,
+          41.22,
+          24
+         ],
+         "line": [
+          210,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -4
+        },
+        {
+         "t": "Month",
+         "seg": [
+          142.31,
+          206,
+          71.5,
+          28
+         ],
+         "lab": [
+          154.31,
+          208,
+          47.5,
+          24
+         ],
+         "line": [
+          210,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -4
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "L",
+    "build": "main",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryL",
+    "prefReadback": "UICTContentSizeCategoryL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "fb4f89469bf81756138775a1b7d65600fc939b0c",
+     "bf": "17px",
+     "iw": 414,
+     "ih": 750,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        16,
+        182.66,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          20,
+          56.13,
+          24
+         ],
+         "lab": [
+          32,
+          20,
+          32.13,
+          24
+         ],
+         "line": [
+          22,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "List",
+         "seg": [
+          78.13,
+          20,
+          50.77,
+          24
+         ],
+         "lab": [
+          90.13,
+          20,
+          26.77,
+          24
+         ],
+         "line": [
+          22,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "Table",
+         "seg": [
+          130.89,
+          20,
+          63.77,
+          24
+         ],
+         "lab": [
+          142.89,
+          20,
+          39.77,
+          24
+         ],
+         "line": [
+          22,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "L",
+    "build": "main",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryL",
+    "prefReadback": "UICTContentSizeCategoryL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+     "bf": "17px",
+     "iw": 414,
+     "ih": 750,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        42,
+        164.58,
+        28
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          46,
+          41.83,
+          20
+         ],
+         "lab": [
+          28,
+          46,
+          25.83,
+          20
+         ],
+         "line": [
+          47,
+          18
+         ],
+         "fs": "14px",
+         "lh": "20.000401px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -1,
+         "spillBot": -1
+        },
+        {
+         "t": "Week",
+         "seg": [
+          63.83,
+          46,
+          52.56,
+          20
+         ],
+         "lab": [
+          71.83,
+          46,
+          36.56,
+          20
+         ],
+         "line": [
+          47,
+          18
+         ],
+         "fs": "14px",
+         "lh": "20.000401px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -1,
+         "spillBot": -1
+        },
+        {
+         "t": "Month",
+         "seg": [
+          118.39,
+          46,
+          58.19,
+          20
+         ],
+         "lab": [
+          126.39,
+          46,
+          42.19,
+          20
+         ],
+         "line": [
+          47,
+          18
+         ],
+         "fs": "14px",
+         "lh": "20.000401px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -1,
+         "spillBot": -1
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        120,
+        201.81,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          124,
+          53.09,
+          24
+         ],
+         "lab": [
+          32,
+          124,
+          29.09,
+          24
+         ],
+         "line": [
+          126,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "Week",
+         "seg": [
+          75.09,
+          124,
+          65.22,
+          24
+         ],
+         "lab": [
+          87.09,
+          124,
+          41.22,
+          24
+         ],
+         "line": [
+          126,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        },
+        {
+         "t": "Month",
+         "seg": [
+          142.31,
+          124,
+          71.5,
+          24
+         ],
+         "lab": [
+          154.31,
+          124,
+          47.5,
+          24
+         ],
+         "line": [
+          126,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -2,
+         "spillBot": -2
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        202,
+        201.81,
+        36
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          206,
+          53.09,
+          28
+         ],
+         "lab": [
+          32,
+          208,
+          29.09,
+          24
+         ],
+         "line": [
+          210,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -4
+        },
+        {
+         "t": "Week",
+         "seg": [
+          75.09,
+          206,
+          65.22,
+          28
+         ],
+         "lab": [
+          87.09,
+          208,
+          41.22,
+          24
+         ],
+         "line": [
+          210,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -4
+        },
+        {
+         "t": "Month",
+         "seg": [
+          142.31,
+          206,
+          71.5,
+          28
+         ],
+         "lab": [
+          154.31,
+          208,
+          47.5,
+          24
+         ],
+         "line": [
+          210,
+          20
+         ],
+         "fs": "16px",
+         "lh": "24px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -4
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX3",
+    "build": "main",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryAccessibilityXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+     "bf": "40px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        28,
+        303.91,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          32,
+          96.11,
+          24
+         ],
+         "lab": [
+          32,
+          16,
+          72.11,
+          56
+         ],
+         "line": [
+          21,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 11,
+         "spillBot": 11
+        },
+        {
+         "t": "List",
+         "seg": [
+          118.11,
+          32,
+          83.8,
+          24
+         ],
+         "lab": [
+          130.11,
+          16,
+          59.8,
+          56
+         ],
+         "line": [
+          21,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 11,
+         "spillBot": 11
+        },
+        {
+         "t": "Table",
+         "seg": [
+          203.91,
+          32,
+          112,
+          24
+         ],
+         "lab": [
+          215.91,
+          16,
+          88,
+          56
+         ],
+         "line": [
+          21,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 11,
+         "spillBot": 11
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX3",
+    "build": "main",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryAccessibilityXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "edcc9efc11cc036f8f98ee1c1092c74013bfdcd4",
+     "bf": "40px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        57,
+        312.58,
+        28
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          61,
+          79.05,
+          20
+         ],
+         "lab": [
+          28,
+          46,
+          63.05,
+          50
+         ],
+         "line": [
+          49,
+          43
+         ],
+         "fs": "35.539001px",
+         "lh": "50.771015px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 12,
+         "spillBot": 11
+        },
+        {
+         "t": "Week",
+         "seg": [
+          101.05,
+          61,
+          104.11,
+          20
+         ],
+         "lab": [
+          109.05,
+          46,
+          88.11,
+          50
+         ],
+         "line": [
+          49,
+          43
+         ],
+         "fs": "35.539001px",
+         "lh": "50.771015px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 12,
+         "spillBot": 11
+        },
+        {
+         "t": "Month",
+         "seg": [
+          207.16,
+          61,
+          117.42,
+          20
+         ],
+         "lab": [
+          215.16,
+          46,
+          101.42,
+          50
+         ],
+         "line": [
+          49,
+          43
+         ],
+         "fs": "35.539001px",
+         "lh": "50.771015px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 12,
+         "spillBot": 11
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        160,
+        351.34,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          164,
+          90.73,
+          24
+         ],
+         "lab": [
+          32,
+          148,
+          66.73,
+          56
+         ],
+         "line": [
+          153,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 11,
+         "spillBot": 11
+        },
+        {
+         "t": "Week",
+         "seg": [
+          112.73,
+          164,
+          117.27,
+          24
+         ],
+         "lab": [
+          124.73,
+          148,
+          93.27,
+          56
+         ],
+         "line": [
+          153,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 11,
+         "spillBot": 11
+        },
+        {
+         "t": "Month",
+         "seg": [
+          232,
+          164,
+          131.34,
+          24
+         ],
+         "lab": [
+          244,
+          148,
+          107.34,
+          56
+         ],
+         "line": [
+          153,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 11,
+         "spillBot": 11
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        264,
+        351.34,
+        36
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          268,
+          90.73,
+          28
+         ],
+         "lab": [
+          32,
+          254,
+          66.73,
+          56
+         ],
+         "line": [
+          259,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 9,
+         "spillBot": 9
+        },
+        {
+         "t": "Week",
+         "seg": [
+          112.73,
+          268,
+          117.27,
+          28
+         ],
+         "lab": [
+          124.73,
+          254,
+          93.27,
+          56
+         ],
+         "line": [
+          259,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 9,
+         "spillBot": 9
+        },
+        {
+         "t": "Month",
+         "seg": [
+          232,
+          268,
+          131.34,
+          28
+         ],
+         "lab": [
+          244,
+          254,
+          107.34,
+          56
+         ],
+         "line": [
+          259,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 9,
+         "spillBot": 9
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX3",
+    "build": "head",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryAccessibilityXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "40px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        16,
+        303.91,
+        64
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          20,
+          96.11,
+          56
+         ],
+         "lab": [
+          32,
+          20,
+          72.11,
+          56
+         ],
+         "line": [
+          25,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        },
+        {
+         "t": "List",
+         "seg": [
+          118.11,
+          20,
+          83.8,
+          56
+         ],
+         "lab": [
+          130.11,
+          20,
+          59.8,
+          56
+         ],
+         "line": [
+          25,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        },
+        {
+         "t": "Table",
+         "seg": [
+          203.91,
+          20,
+          112,
+          56
+         ],
+         "lab": [
+          215.91,
+          20,
+          88,
+          56
+         ],
+         "line": [
+          25,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX3",
+    "build": "head",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryAccessibilityXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "40px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        42,
+        312.58,
+        58
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          46,
+          79.05,
+          50
+         ],
+         "lab": [
+          28,
+          46,
+          63.05,
+          50
+         ],
+         "line": [
+          49,
+          43
+         ],
+         "fs": "35.539001px",
+         "lh": "50.771015px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -3,
+         "spillBot": -4
+        },
+        {
+         "t": "Week",
+         "seg": [
+          101.05,
+          46,
+          104.11,
+          50
+         ],
+         "lab": [
+          109.05,
+          46,
+          88.11,
+          50
+         ],
+         "line": [
+          49,
+          43
+         ],
+         "fs": "35.539001px",
+         "lh": "50.771015px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -3,
+         "spillBot": -4
+        },
+        {
+         "t": "Month",
+         "seg": [
+          207.16,
+          46,
+          117.42,
+          50
+         ],
+         "lab": [
+          215.16,
+          46,
+          101.42,
+          50
+         ],
+         "line": [
+          49,
+          43
+         ],
+         "fs": "35.539001px",
+         "lh": "50.771015px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -3,
+         "spillBot": -4
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        150,
+        351.34,
+        64
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          154,
+          90.73,
+          56
+         ],
+         "lab": [
+          32,
+          154,
+          66.73,
+          56
+         ],
+         "line": [
+          159,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        },
+        {
+         "t": "Week",
+         "seg": [
+          112.73,
+          154,
+          117.27,
+          56
+         ],
+         "lab": [
+          124.73,
+          154,
+          93.27,
+          56
+         ],
+         "line": [
+          159,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        },
+        {
+         "t": "Month",
+         "seg": [
+          232,
+          154,
+          131.34,
+          56
+         ],
+         "lab": [
+          244,
+          154,
+          107.34,
+          56
+         ],
+         "line": [
+          159,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        264,
+        351.34,
+        64
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          268,
+          90.73,
+          56
+         ],
+         "lab": [
+          32,
+          268,
+          66.73,
+          56
+         ],
+         "line": [
+          273,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        },
+        {
+         "t": "Week",
+         "seg": [
+          112.73,
+          268,
+          117.27,
+          56
+         ],
+         "lab": [
+          124.73,
+          268,
+          93.27,
+          56
+         ],
+         "line": [
+          273,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        },
+        {
+         "t": "Month",
+         "seg": [
+          232,
+          268,
+          131.34,
+          56
+         ],
+         "lab": [
+          244,
+          268,
+          107.34,
+          56
+         ],
+         "line": [
+          273,
+          46
+         ],
+         "fs": "37.6464px",
+         "lh": "56.469601px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -5,
+         "spillBot": -5
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX4",
+    "build": "head",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryAccessibilityXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "47px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        16,
+        341.27,
+        74
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          20,
+          108.38,
+          66
+         ],
+         "lab": [
+          32,
+          20,
+          84.38,
+          66
+         ],
+         "line": [
+          26,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        },
+        {
+         "t": "List",
+         "seg": [
+          130.38,
+          20,
+          93.92,
+          66
+         ],
+         "lab": [
+          142.38,
+          20,
+          69.92,
+          66
+         ],
+         "line": [
+          26,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        },
+        {
+         "t": "Table",
+         "seg": [
+          226.3,
+          20,
+          126.97,
+          66
+         ],
+         "lab": [
+          238.3,
+          20,
+          102.97,
+          66
+         ],
+         "line": [
+          26,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX4",
+    "build": "head",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryAccessibilityXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "47px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        44,
+        350.13,
+        66
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          48,
+          88.42,
+          58
+         ],
+         "lab": [
+          28,
+          48,
+          72.42,
+          58
+         ],
+         "line": [
+          52,
+          49
+         ],
+         "fs": "40.923401px",
+         "lh": "58.463169px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -5
+        },
+        {
+         "t": "Week",
+         "seg": [
+          110.42,
+          48,
+          117.22,
+          58
+         ],
+         "lab": [
+          118.42,
+          48,
+          101.22,
+          58
+         ],
+         "line": [
+          52,
+          49
+         ],
+         "fs": "40.923401px",
+         "lh": "58.463169px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -5
+        },
+        {
+         "t": "Month",
+         "seg": [
+          229.64,
+          48,
+          132.48,
+          58
+         ],
+         "lab": [
+          237.64,
+          48,
+          116.48,
+          58
+         ],
+         "line": [
+          52,
+          49
+         ],
+         "fs": "40.923401px",
+         "lh": "58.463169px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -5
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        160,
+        382,
+        74
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          164,
+          98.38,
+          66
+         ],
+         "lab": [
+          32,
+          164,
+          74.38,
+          66
+         ],
+         "line": [
+          170,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          164,
+          127.97,
+          66
+         ],
+         "lab": [
+          132.38,
+          164,
+          103.97,
+          66
+         ],
+         "line": [
+          170,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.34,
+          164,
+          143.66,
+          66
+         ],
+         "lab": [
+          262.34,
+          164,
+          119.66,
+          66
+         ],
+         "line": [
+          170,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        284,
+        382,
+        74
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          288,
+          98.38,
+          66
+         ],
+         "lab": [
+          32,
+          288,
+          74.38,
+          66
+         ],
+         "line": [
+          294,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          288,
+          127.97,
+          66
+         ],
+         "lab": [
+          132.38,
+          288,
+          103.97,
+          66
+         ],
+         "line": [
+          294,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.34,
+          288,
+          143.66,
+          66
+         ],
+         "lab": [
+          262.34,
+          288,
+          119.66,
+          66
+         ],
+         "line": [
+          294,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -6
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX4",
+    "build": "main",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryAccessibilityXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "bf": "47px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        33,
+        341.27,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          37,
+          108.38,
+          24
+         ],
+         "lab": [
+          32,
+          16,
+          84.38,
+          66
+         ],
+         "line": [
+          22,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 15
+        },
+        {
+         "t": "List",
+         "seg": [
+          130.38,
+          37,
+          93.92,
+          24
+         ],
+         "lab": [
+          142.38,
+          16,
+          69.92,
+          66
+         ],
+         "line": [
+          22,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 15
+        },
+        {
+         "t": "Table",
+         "seg": [
+          226.3,
+          37,
+          126.97,
+          24
+         ],
+         "lab": [
+          238.3,
+          16,
+          102.97,
+          66
+         ],
+         "line": [
+          22,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 15
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX4",
+    "build": "main",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryAccessibilityXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "bf": "47px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        63,
+        350.13,
+        28
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          67,
+          88.42,
+          20
+         ],
+         "lab": [
+          28,
+          48,
+          72.42,
+          58
+         ],
+         "line": [
+          52,
+          49
+         ],
+         "fs": "40.923401px",
+         "lh": "58.463169px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 14
+        },
+        {
+         "t": "Week",
+         "seg": [
+          110.42,
+          67,
+          117.22,
+          20
+         ],
+         "lab": [
+          118.42,
+          48,
+          101.22,
+          58
+         ],
+         "line": [
+          52,
+          49
+         ],
+         "fs": "40.923401px",
+         "lh": "58.463169px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 14
+        },
+        {
+         "t": "Month",
+         "seg": [
+          229.64,
+          67,
+          132.48,
+          20
+         ],
+         "lab": [
+          237.64,
+          48,
+          116.48,
+          58
+         ],
+         "line": [
+          52,
+          49
+         ],
+         "fs": "40.923401px",
+         "lh": "58.463169px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 14
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        175,
+        382,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          179,
+          98.38,
+          24
+         ],
+         "lab": [
+          32,
+          158,
+          74.38,
+          66
+         ],
+         "line": [
+          164,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 15
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          179,
+          127.97,
+          24
+         ],
+         "lab": [
+          132.38,
+          158,
+          103.97,
+          66
+         ],
+         "line": [
+          164,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 15
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.34,
+          179,
+          143.66,
+          24
+         ],
+         "lab": [
+          262.34,
+          158,
+          119.66,
+          66
+         ],
+         "line": [
+          164,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 15,
+         "spillBot": 15
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        289,
+        382,
+        36
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          293,
+          98.38,
+          28
+         ],
+         "lab": [
+          32,
+          274,
+          74.38,
+          66
+         ],
+         "line": [
+          280,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 13,
+         "spillBot": 13
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          293,
+          127.97,
+          28
+         ],
+         "lab": [
+          132.38,
+          274,
+          103.97,
+          66
+         ],
+         "line": [
+          280,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 13,
+         "spillBot": 13
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.34,
+          293,
+          143.66,
+          28
+         ],
+         "lab": [
+          262.34,
+          274,
+          119.66,
+          66
+         ],
+         "line": [
+          280,
+          54
+         ],
+         "fs": "44.235199px",
+         "lh": "66.352798px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 13,
+         "spillBot": 13
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX5",
+    "build": "main",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryAccessibilityXXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "bf": "53px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        37,
+        373.47,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          41,
+          118.95,
+          24
+         ],
+         "lab": [
+          32,
+          16,
+          94.95,
+          74
+         ],
+         "line": [
+          22,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 19,
+         "spillBot": 18
+        },
+        {
+         "t": "List",
+         "seg": [
+          140.95,
+          41,
+          102.66,
+          24
+         ],
+         "lab": [
+          152.95,
+          16,
+          78.66,
+          74
+         ],
+         "line": [
+          22,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 19,
+         "spillBot": 18
+        },
+        {
+         "t": "Table",
+         "seg": [
+          245.61,
+          41,
+          139.86,
+          24
+         ],
+         "lab": [
+          257.61,
+          16,
+          115.86,
+          74
+         ],
+         "line": [
+          22,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": 19,
+         "spillBot": 18
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX5",
+    "build": "main",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryAccessibilityXXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+    "probe": {
+     "href": "<the Production deploy>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "35bda7f8f11c2c0b076ba07f24bb171207ce85e3",
+     "bf": "53px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        66,
+        382,
+        28
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          70,
+          96.38,
+          20
+         ],
+         "lab": [
+          28,
+          46.5,
+          80.38,
+          67
+         ],
+         "line": [
+          50.5,
+          58
+         ],
+         "fs": "47.384399px",
+         "lh": "67.693352px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 19.5,
+         "spillBot": 18.5
+        },
+        {
+         "t": "Week",
+         "seg": [
+          118.38,
+          70,
+          128.36,
+          20
+         ],
+         "lab": [
+          126.38,
+          46.5,
+          112.36,
+          67
+         ],
+         "line": [
+          50.5,
+          58
+         ],
+         "fs": "47.384399px",
+         "lh": "67.693352px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 19.5,
+         "spillBot": 18.5
+        },
+        {
+         "t": "Month",
+         "seg": [
+          248.73,
+          70,
+          145.28,
+          20
+         ],
+         "lab": [
+          256.73,
+          46.5,
+          129.28,
+          67
+         ],
+         "line": [
+          50.5,
+          58
+         ],
+         "fs": "47.384399px",
+         "lh": "67.693352px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 19.5,
+         "spillBot": 18.5
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        187,
+        382,
+        32
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          191,
+          98.38,
+          24
+         ],
+         "lab": [
+          32,
+          166,
+          74.38,
+          74
+         ],
+         "line": [
+          172,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 19,
+         "spillBot": 18
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          191,
+          127.98,
+          24
+         ],
+         "lab": [
+          132.38,
+          166,
+          103.98,
+          74
+         ],
+         "line": [
+          172,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 19,
+         "spillBot": 18
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.36,
+          191,
+          143.64,
+          24
+         ],
+         "lab": [
+          262.36,
+          166,
+          119.64,
+          74
+         ],
+         "line": [
+          172,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 19,
+         "spillBot": 18
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        309,
+        382,
+        36
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          313,
+          98.38,
+          28
+         ],
+         "lab": [
+          32,
+          290,
+          74.38,
+          74
+         ],
+         "line": [
+          296,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 17,
+         "spillBot": 16
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          313,
+          127.98,
+          28
+         ],
+         "lab": [
+          132.38,
+          290,
+          103.98,
+          74
+         ],
+         "line": [
+          296,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 17,
+         "spillBot": 16
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.36,
+          313,
+          143.64,
+          28
+         ],
+         "lab": [
+          262.36,
+          290,
+          119.64,
+          74
+         ],
+         "line": [
+          296,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": 17,
+         "spillBot": 16
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX5",
+    "build": "head",
+    "story": "core-segmentedcontrol--default",
+    "category": "UICTContentSizeCategoryAccessibilityXXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "53px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        16,
+        373.47,
+        82
+       ],
+       "segs": [
+        {
+         "t": "Grid",
+         "seg": [
+          20,
+          20,
+          118.95,
+          74
+         ],
+         "lab": [
+          32,
+          20,
+          94.95,
+          74
+         ],
+         "line": [
+          26,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        },
+        {
+         "t": "List",
+         "seg": [
+          140.95,
+          20,
+          102.66,
+          74
+         ],
+         "lab": [
+          152.95,
+          20,
+          78.66,
+          74
+         ],
+         "line": [
+          26,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        },
+        {
+         "t": "Table",
+         "seg": [
+          245.61,
+          20,
+          139.86,
+          74
+         ],
+         "lab": [
+          257.61,
+          20,
+          115.86,
+          74
+         ],
+         "line": [
+          26,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": false,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "size": "AX5",
+    "build": "head",
+    "story": "core-segmentedcontrol--size-variants",
+    "category": "UICTContentSizeCategoryAccessibilityXXXL",
+    "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+    "probe": {
+     "href": "<the preview deploy of 872843fa>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+     "v": "872843fa91b1e83a70fdf4c9415b0584376095aa",
+     "bf": "53px",
+     "iw": 414,
+     "ih": 689,
+     "dpr": 2,
+     "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+     "G": [
+      {
+       "track": [
+        16,
+        42,
+        382,
+        75
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          46,
+          96.38,
+          67
+         ],
+         "lab": [
+          28,
+          46,
+          80.38,
+          67
+         ],
+         "line": [
+          50,
+          58
+         ],
+         "fs": "47.384399px",
+         "lh": "67.693352px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -5
+        },
+        {
+         "t": "Week",
+         "seg": [
+          118.38,
+          46,
+          128.36,
+          67
+         ],
+         "lab": [
+          126.38,
+          46,
+          112.36,
+          67
+         ],
+         "line": [
+          50,
+          58
+         ],
+         "fs": "47.384399px",
+         "lh": "67.693352px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -5
+        },
+        {
+         "t": "Month",
+         "seg": [
+          248.73,
+          46,
+          145.28,
+          67
+         ],
+         "lab": [
+          256.73,
+          46,
+          129.28,
+          67
+         ],
+         "line": [
+          50,
+          58
+         ],
+         "fs": "47.384399px",
+         "lh": "67.693352px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -4,
+         "spillBot": -5
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        167,
+        382,
+        82
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          171,
+          98.38,
+          74
+         ],
+         "lab": [
+          32,
+          171,
+          74.38,
+          74
+         ],
+         "line": [
+          177,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          171,
+          127.98,
+          74
+         ],
+         "lab": [
+          132.38,
+          171,
+          103.98,
+          74
+         ],
+         "line": [
+          177,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.36,
+          171,
+          143.64,
+          74
+         ],
+         "lab": [
+          262.36,
+          171,
+          119.64,
+          74
+         ],
+         "line": [
+          177,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        }
+       ]
+      },
+      {
+       "track": [
+        16,
+        299,
+        382,
+        82
+       ],
+       "segs": [
+        {
+         "t": "Day",
+         "seg": [
+          20,
+          303,
+          98.38,
+          74
+         ],
+         "lab": [
+          32,
+          303,
+          74.38,
+          74
+         ],
+         "line": [
+          309,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        },
+        {
+         "t": "Week",
+         "seg": [
+          120.38,
+          303,
+          127.98,
+          74
+         ],
+         "lab": [
+          132.38,
+          303,
+          103.98,
+          74
+         ],
+         "line": [
+          309,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        },
+        {
+         "t": "Month",
+         "seg": [
+          250.36,
+          303,
+          143.64,
+          74
+         ],
+         "lab": [
+          262.36,
+          303,
+          119.64,
+          74
+         ],
+         "line": [
+          309,
+          61
+         ],
+         "fs": "49.881599px",
+         "lh": "74.822395px",
+         "ell": true,
+         "ov": "visible",
+         "spillTop": -6,
+         "spillBot": -7
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "head": {
+  "segments": 48,
+  "labelsInsideTheirSegment": 48,
+  "textOutsideTrack": 0
+ },
+ "spill": {
+  "definition": "the larger of spillTop and spillBottom: the text line box past the segment's top or bottom edge, CSS px",
+  "topMinusBottom": [
+   0,
+   1
+  ]
+ },
+ "derived": {
+  "default": {
+   "L": {
+    "main": [
+     {
+      "label": "Grid",
+      "segment": 24,
+      "labelBox": 24,
+      "textLine": 20,
+      "fontSize": "16",
+      "lineHeight": "24",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -2,
+      "spillBottom": -2,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "List",
+      "segment": 24,
+      "labelBox": 24,
+      "textLine": 20,
+      "fontSize": "16",
+      "lineHeight": "24",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -2,
+      "spillBottom": -2,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "Table",
+      "segment": 24,
+      "labelBox": 24,
+      "textLine": 20,
+      "fontSize": "16",
+      "lineHeight": "24",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -2,
+      "spillBottom": -2,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     }
+    ],
+    "head": [
+     {
+      "label": "Grid",
+      "segment": 24,
+      "labelBox": 24,
+      "textLine": 20,
+      "fontSize": "16",
+      "lineHeight": "24",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -2,
+      "spillBottom": -2,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "List",
+      "segment": 24,
+      "labelBox": 24,
+      "textLine": 20,
+      "fontSize": "16",
+      "lineHeight": "24",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -2,
+      "spillBottom": -2,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "Table",
+      "segment": 24,
+      "labelBox": 24,
+      "textLine": 20,
+      "fontSize": "16",
+      "lineHeight": "24",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -2,
+      "spillBottom": -2,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     }
+    ],
+    "bodyMain": "17px",
+    "bodyHead": "17px"
+   },
+   "AX3": {
+    "main": [
+     {
+      "label": "Grid",
+      "segment": 24,
+      "labelBox": 56,
+      "textLine": 46,
+      "fontSize": "37.6464",
+      "lineHeight": "56.469601",
+      "ellipsis": false,
+      "spill": 11,
+      "spillTop": 11,
+      "spillBottom": 11,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     },
+     {
+      "label": "List",
+      "segment": 24,
+      "labelBox": 56,
+      "textLine": 46,
+      "fontSize": "37.6464",
+      "lineHeight": "56.469601",
+      "ellipsis": false,
+      "spill": 11,
+      "spillTop": 11,
+      "spillBottom": 11,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     },
+     {
+      "label": "Table",
+      "segment": 24,
+      "labelBox": 56,
+      "textLine": 46,
+      "fontSize": "37.6464",
+      "lineHeight": "56.469601",
+      "ellipsis": false,
+      "spill": 11,
+      "spillTop": 11,
+      "spillBottom": 11,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     }
+    ],
+    "head": [
+     {
+      "label": "Grid",
+      "segment": 56,
+      "labelBox": 56,
+      "textLine": 46,
+      "fontSize": "37.6464",
+      "lineHeight": "56.469601",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -5,
+      "spillBottom": -5,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "List",
+      "segment": 56,
+      "labelBox": 56,
+      "textLine": 46,
+      "fontSize": "37.6464",
+      "lineHeight": "56.469601",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -5,
+      "spillBottom": -5,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "Table",
+      "segment": 56,
+      "labelBox": 56,
+      "textLine": 46,
+      "fontSize": "37.6464",
+      "lineHeight": "56.469601",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -5,
+      "spillBottom": -5,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     }
+    ],
+    "bodyMain": "40px",
+    "bodyHead": "40px"
+   },
+   "AX4": {
+    "main": [
+     {
+      "label": "Grid",
+      "segment": 24,
+      "labelBox": 66,
+      "textLine": 54,
+      "fontSize": "44.235199",
+      "lineHeight": "66.352798",
+      "ellipsis": false,
+      "spill": 15,
+      "spillTop": 15,
+      "spillBottom": 15,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     },
+     {
+      "label": "List",
+      "segment": 24,
+      "labelBox": 66,
+      "textLine": 54,
+      "fontSize": "44.235199",
+      "lineHeight": "66.352798",
+      "ellipsis": false,
+      "spill": 15,
+      "spillTop": 15,
+      "spillBottom": 15,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     },
+     {
+      "label": "Table",
+      "segment": 24,
+      "labelBox": 66,
+      "textLine": 54,
+      "fontSize": "44.235199",
+      "lineHeight": "66.352798",
+      "ellipsis": false,
+      "spill": 15,
+      "spillTop": 15,
+      "spillBottom": 15,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     }
+    ],
+    "head": [
+     {
+      "label": "Grid",
+      "segment": 66,
+      "labelBox": 66,
+      "textLine": 54,
+      "fontSize": "44.235199",
+      "lineHeight": "66.352798",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -6,
+      "spillBottom": -6,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "List",
+      "segment": 66,
+      "labelBox": 66,
+      "textLine": 54,
+      "fontSize": "44.235199",
+      "lineHeight": "66.352798",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -6,
+      "spillBottom": -6,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "Table",
+      "segment": 66,
+      "labelBox": 66,
+      "textLine": 54,
+      "fontSize": "44.235199",
+      "lineHeight": "66.352798",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -6,
+      "spillBottom": -6,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     }
+    ],
+    "bodyMain": "47px",
+    "bodyHead": "47px"
+   },
+   "AX5": {
+    "main": [
+     {
+      "label": "Grid",
+      "segment": 24,
+      "labelBox": 74,
+      "textLine": 61,
+      "fontSize": "49.881599",
+      "lineHeight": "74.822395",
+      "ellipsis": false,
+      "spill": 19,
+      "spillTop": 19,
+      "spillBottom": 18,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     },
+     {
+      "label": "List",
+      "segment": 24,
+      "labelBox": 74,
+      "textLine": 61,
+      "fontSize": "49.881599",
+      "lineHeight": "74.822395",
+      "ellipsis": false,
+      "spill": 19,
+      "spillTop": 19,
+      "spillBottom": 18,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     },
+     {
+      "label": "Table",
+      "segment": 24,
+      "labelBox": 74,
+      "textLine": 61,
+      "fontSize": "49.881599",
+      "lineHeight": "74.822395",
+      "ellipsis": false,
+      "spill": 19,
+      "spillTop": 19,
+      "spillBottom": 18,
+      "textOutsideTrack": true,
+      "labelInsideSegment": false
+     }
+    ],
+    "head": [
+     {
+      "label": "Grid",
+      "segment": 74,
+      "labelBox": 74,
+      "textLine": 61,
+      "fontSize": "49.881599",
+      "lineHeight": "74.822395",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -6,
+      "spillBottom": -7,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "List",
+      "segment": 74,
+      "labelBox": 74,
+      "textLine": 61,
+      "fontSize": "49.881599",
+      "lineHeight": "74.822395",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -6,
+      "spillBottom": -7,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     },
+     {
+      "label": "Table",
+      "segment": 74,
+      "labelBox": 74,
+      "textLine": 61,
+      "fontSize": "49.881599",
+      "lineHeight": "74.822395",
+      "ellipsis": false,
+      "spill": 0,
+      "spillTop": -6,
+      "spillBottom": -7,
+      "textOutsideTrack": false,
+      "labelInsideSegment": true
+     }
+    ],
+    "bodyMain": "53px",
+    "bodyHead": "53px"
+   }
+  },
+  "sizeVariants": {
+   "L": {
+    "main": [
+     [
+      {
+       "label": "Day",
+       "segment": 20,
+       "labelBox": 20,
+       "textLine": 18,
+       "fontSize": "14",
+       "lineHeight": "20.000401",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -1,
+       "spillBottom": -1,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 20,
+       "labelBox": 20,
+       "textLine": 18,
+       "fontSize": "14",
+       "lineHeight": "20.000401",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -1,
+       "spillBottom": -1,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 20,
+       "labelBox": 20,
+       "textLine": 18,
+       "fontSize": "14",
+       "lineHeight": "20.000401",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -1,
+       "spillBottom": -1,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 24,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -2,
+       "spillBottom": -2,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 24,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -2,
+       "spillBottom": -2,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 24,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -2,
+       "spillBottom": -2,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 28,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 28,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 28,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ]
+    ],
+    "head": [
+     [
+      {
+       "label": "Day",
+       "segment": 20,
+       "labelBox": 20,
+       "textLine": 18,
+       "fontSize": "14",
+       "lineHeight": "20.000401",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -1,
+       "spillBottom": -1,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 20,
+       "labelBox": 20,
+       "textLine": 18,
+       "fontSize": "14",
+       "lineHeight": "20.000401",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -1,
+       "spillBottom": -1,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 20,
+       "labelBox": 20,
+       "textLine": 18,
+       "fontSize": "14",
+       "lineHeight": "20.000401",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -1,
+       "spillBottom": -1,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 24,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -2,
+       "spillBottom": -2,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 24,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -2,
+       "spillBottom": -2,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 24,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -2,
+       "spillBottom": -2,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 28,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 28,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 28,
+       "labelBox": 24,
+       "textLine": 20,
+       "fontSize": "16",
+       "lineHeight": "24",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ]
+    ],
+    "bodyMain": "17px",
+    "bodyHead": "17px"
+   },
+   "AX3": {
+    "main": [
+     [
+      {
+       "label": "Day",
+       "segment": 20,
+       "labelBox": 50,
+       "textLine": 43,
+       "fontSize": "35.539001",
+       "lineHeight": "50.771015",
+       "ellipsis": false,
+       "spill": 12,
+       "spillTop": 12,
+       "spillBottom": 11,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 20,
+       "labelBox": 50,
+       "textLine": 43,
+       "fontSize": "35.539001",
+       "lineHeight": "50.771015",
+       "ellipsis": false,
+       "spill": 12,
+       "spillTop": 12,
+       "spillBottom": 11,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 20,
+       "labelBox": 50,
+       "textLine": 43,
+       "fontSize": "35.539001",
+       "lineHeight": "50.771015",
+       "ellipsis": false,
+       "spill": 12,
+       "spillTop": 12,
+       "spillBottom": 11,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 24,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 11,
+       "spillTop": 11,
+       "spillBottom": 11,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 24,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 11,
+       "spillTop": 11,
+       "spillBottom": 11,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 24,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 11,
+       "spillTop": 11,
+       "spillBottom": 11,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 28,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 9,
+       "spillTop": 9,
+       "spillBottom": 9,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 28,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 9,
+       "spillTop": 9,
+       "spillBottom": 9,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 28,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 9,
+       "spillTop": 9,
+       "spillBottom": 9,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ]
+    ],
+    "head": [
+     [
+      {
+       "label": "Day",
+       "segment": 50,
+       "labelBox": 50,
+       "textLine": 43,
+       "fontSize": "35.539001",
+       "lineHeight": "50.771015",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -3,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 50,
+       "labelBox": 50,
+       "textLine": 43,
+       "fontSize": "35.539001",
+       "lineHeight": "50.771015",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -3,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 50,
+       "labelBox": 50,
+       "textLine": 43,
+       "fontSize": "35.539001",
+       "lineHeight": "50.771015",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -3,
+       "spillBottom": -4,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 56,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -5,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 56,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -5,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 56,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -5,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 56,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -5,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 56,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -5,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 56,
+       "labelBox": 56,
+       "textLine": 46,
+       "fontSize": "37.6464",
+       "lineHeight": "56.469601",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -5,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ]
+    ],
+    "bodyMain": "40px",
+    "bodyHead": "40px"
+   },
+   "AX4": {
+    "main": [
+     [
+      {
+       "label": "Day",
+       "segment": 20,
+       "labelBox": 58,
+       "textLine": 49,
+       "fontSize": "40.923401",
+       "lineHeight": "58.463169",
+       "ellipsis": false,
+       "spill": 15,
+       "spillTop": 15,
+       "spillBottom": 14,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 20,
+       "labelBox": 58,
+       "textLine": 49,
+       "fontSize": "40.923401",
+       "lineHeight": "58.463169",
+       "ellipsis": false,
+       "spill": 15,
+       "spillTop": 15,
+       "spillBottom": 14,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 20,
+       "labelBox": 58,
+       "textLine": 49,
+       "fontSize": "40.923401",
+       "lineHeight": "58.463169",
+       "ellipsis": false,
+       "spill": 15,
+       "spillTop": 15,
+       "spillBottom": 14,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 24,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 15,
+       "spillTop": 15,
+       "spillBottom": 15,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 24,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 15,
+       "spillTop": 15,
+       "spillBottom": 15,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 24,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 15,
+       "spillTop": 15,
+       "spillBottom": 15,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 28,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 13,
+       "spillTop": 13,
+       "spillBottom": 13,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 28,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 13,
+       "spillTop": 13,
+       "spillBottom": 13,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 28,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 13,
+       "spillTop": 13,
+       "spillBottom": 13,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ]
+    ],
+    "head": [
+     [
+      {
+       "label": "Day",
+       "segment": 58,
+       "labelBox": 58,
+       "textLine": 49,
+       "fontSize": "40.923401",
+       "lineHeight": "58.463169",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 58,
+       "labelBox": 58,
+       "textLine": 49,
+       "fontSize": "40.923401",
+       "lineHeight": "58.463169",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 58,
+       "labelBox": 58,
+       "textLine": 49,
+       "fontSize": "40.923401",
+       "lineHeight": "58.463169",
+       "ellipsis": false,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 66,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -6,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 66,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -6,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 66,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -6,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 66,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -6,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 66,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -6,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 66,
+       "labelBox": 66,
+       "textLine": 54,
+       "fontSize": "44.235199",
+       "lineHeight": "66.352798",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -6,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ]
+    ],
+    "bodyMain": "47px",
+    "bodyHead": "47px"
+   },
+   "AX5": {
+    "main": [
+     [
+      {
+       "label": "Day",
+       "segment": 20,
+       "labelBox": 67,
+       "textLine": 58,
+       "fontSize": "47.384399",
+       "lineHeight": "67.693352",
+       "ellipsis": true,
+       "spill": 19.5,
+       "spillTop": 19.5,
+       "spillBottom": 18.5,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 20,
+       "labelBox": 67,
+       "textLine": 58,
+       "fontSize": "47.384399",
+       "lineHeight": "67.693352",
+       "ellipsis": true,
+       "spill": 19.5,
+       "spillTop": 19.5,
+       "spillBottom": 18.5,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 20,
+       "labelBox": 67,
+       "textLine": 58,
+       "fontSize": "47.384399",
+       "lineHeight": "67.693352",
+       "ellipsis": true,
+       "spill": 19.5,
+       "spillTop": 19.5,
+       "spillBottom": 18.5,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 24,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 19,
+       "spillTop": 19,
+       "spillBottom": 18,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 24,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 19,
+       "spillTop": 19,
+       "spillBottom": 18,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 24,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 19,
+       "spillTop": 19,
+       "spillBottom": 18,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 28,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 17,
+       "spillTop": 17,
+       "spillBottom": 16,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Week",
+       "segment": 28,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 17,
+       "spillTop": 17,
+       "spillBottom": 16,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      },
+      {
+       "label": "Month",
+       "segment": 28,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 17,
+       "spillTop": 17,
+       "spillBottom": 16,
+       "textOutsideTrack": true,
+       "labelInsideSegment": false
+      }
+     ]
+    ],
+    "head": [
+     [
+      {
+       "label": "Day",
+       "segment": 67,
+       "labelBox": 67,
+       "textLine": 58,
+       "fontSize": "47.384399",
+       "lineHeight": "67.693352",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 67,
+       "labelBox": 67,
+       "textLine": 58,
+       "fontSize": "47.384399",
+       "lineHeight": "67.693352",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 67,
+       "labelBox": 67,
+       "textLine": 58,
+       "fontSize": "47.384399",
+       "lineHeight": "67.693352",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -4,
+       "spillBottom": -5,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 74,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -7,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 74,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -7,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 74,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -7,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ],
+     [
+      {
+       "label": "Day",
+       "segment": 74,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -7,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Week",
+       "segment": 74,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -7,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      },
+      {
+       "label": "Month",
+       "segment": 74,
+       "labelBox": 74,
+       "textLine": 61,
+       "fontSize": "49.881599",
+       "lineHeight": "74.822395",
+       "ellipsis": true,
+       "spill": 0,
+       "spillTop": -6,
+       "spillBottom": -7,
+       "textOutsideTrack": false,
+       "labelInsideSegment": true
+      }
+     ]
+    ],
+    "bodyMain": "53px",
+    "bodyHead": "53px"
+   }
+  }
+ },
+ "fields": {
+  "seg": "segment box [x, y, width, height], CSS px",
+  "lab": "label element box [x, y, width, height]",
+  "line": "label text line box (Range rects) [top, height]",
+  "track": "the control's track box [x, y, width, height]",
+  "fs": "font size",
+  "lh": "line height",
+  "ell": "ellipsis: scrollWidth > clientWidth",
+  "ov": "the segment's overflow",
+  "spillTop": "the line box past the segment's top edge",
+  "spillBot": "the line box past the segment's bottom edge",
+  "bf": "the in-page body font size (font: -apple-system-body)"
+ },
+ "stills": [
+  {
+   "file": "12457-default-ax3.png",
+   "kept": "IHDR cHRM bKGD IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-default-ax4.png",
+   "kept": "IHDR cHRM bKGD IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-default-ax5.png",
+   "kept": "IHDR cHRM bKGD IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-default-l.png",
+   "kept": "IHDR cHRM bKGD IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-size-variants-ax3.png",
+   "kept": "IHDR cHRM bKGD IDAT IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-size-variants-ax4.png",
+   "kept": "IHDR cHRM bKGD IDAT IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-size-variants-ax5.png",
+   "kept": "IHDR cHRM bKGD IDAT IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "12457-size-variants-l.png",
+   "kept": "IHDR cHRM bKGD IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  }
+ ],
+ "takes": [
+  {
+   "size": "L",
+   "build": "head",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryL",
+   "prefReadback": "UICTContentSizeCategoryL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "17px",
+    "iw": 414,
+    "ih": 750,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       16,
+       182.66,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         20,
+         56.13,
+         24
+        ],
+        "lab": [
+         32,
+         20,
+         32.13,
+         24
+        ],
+        "line": [
+         22,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "List",
+        "seg": [
+         78.13,
+         20,
+         50.77,
+         24
+        ],
+        "lab": [
+         90.13,
+         20,
+         26.77,
+         24
+        ],
+        "line": [
+         22,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "Table",
+        "seg": [
+         130.89,
+         20,
+         63.77,
+         24
+        ],
+        "lab": [
+         142.89,
+         20,
+         39.77,
+         24
+        ],
+        "line": [
+         22,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "L",
+   "build": "head",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryL",
+   "prefReadback": "UICTContentSizeCategoryL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "17px",
+    "iw": 414,
+    "ih": 750,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       42,
+       164.58,
+       28
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         46,
+         41.83,
+         20
+        ],
+        "lab": [
+         28,
+         46,
+         25.83,
+         20
+        ],
+        "line": [
+         47,
+         18
+        ],
+        "fs": "14px",
+        "lh": "20.000401px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -1,
+        "spillBot": -1
+       },
+       {
+        "t": "Week",
+        "seg": [
+         63.83,
+         46,
+         52.56,
+         20
+        ],
+        "lab": [
+         71.83,
+         46,
+         36.56,
+         20
+        ],
+        "line": [
+         47,
+         18
+        ],
+        "fs": "14px",
+        "lh": "20.000401px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -1,
+        "spillBot": -1
+       },
+       {
+        "t": "Month",
+        "seg": [
+         118.39,
+         46,
+         58.19,
+         20
+        ],
+        "lab": [
+         126.39,
+         46,
+         42.19,
+         20
+        ],
+        "line": [
+         47,
+         18
+        ],
+        "fs": "14px",
+        "lh": "20.000401px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -1,
+        "spillBot": -1
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       120,
+       201.81,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         124,
+         53.09,
+         24
+        ],
+        "lab": [
+         32,
+         124,
+         29.09,
+         24
+        ],
+        "line": [
+         126,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "Week",
+        "seg": [
+         75.09,
+         124,
+         65.22,
+         24
+        ],
+        "lab": [
+         87.09,
+         124,
+         41.22,
+         24
+        ],
+        "line": [
+         126,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "Month",
+        "seg": [
+         142.31,
+         124,
+         71.5,
+         24
+        ],
+        "lab": [
+         154.31,
+         124,
+         47.5,
+         24
+        ],
+        "line": [
+         126,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       202,
+       201.81,
+       36
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         206,
+         53.09,
+         28
+        ],
+        "lab": [
+         32,
+         208,
+         29.09,
+         24
+        ],
+        "line": [
+         210,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -4
+       },
+       {
+        "t": "Week",
+        "seg": [
+         75.09,
+         206,
+         65.22,
+         28
+        ],
+        "lab": [
+         87.09,
+         208,
+         41.22,
+         24
+        ],
+        "line": [
+         210,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -4
+       },
+       {
+        "t": "Month",
+        "seg": [
+         142.31,
+         206,
+         71.5,
+         28
+        ],
+        "lab": [
+         154.31,
+         208,
+         47.5,
+         24
+        ],
+        "line": [
+         210,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -4
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "L",
+   "build": "main",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryL",
+   "prefReadback": "UICTContentSizeCategoryL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "17px",
+    "iw": 414,
+    "ih": 750,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       16,
+       182.66,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         20,
+         56.13,
+         24
+        ],
+        "lab": [
+         32,
+         20,
+         32.13,
+         24
+        ],
+        "line": [
+         22,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "List",
+        "seg": [
+         78.13,
+         20,
+         50.77,
+         24
+        ],
+        "lab": [
+         90.13,
+         20,
+         26.77,
+         24
+        ],
+        "line": [
+         22,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "Table",
+        "seg": [
+         130.89,
+         20,
+         63.77,
+         24
+        ],
+        "lab": [
+         142.89,
+         20,
+         39.77,
+         24
+        ],
+        "line": [
+         22,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "L",
+   "build": "main",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryL",
+   "prefReadback": "UICTContentSizeCategoryL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "17px",
+    "iw": 414,
+    "ih": 750,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       42,
+       164.58,
+       28
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         46,
+         41.83,
+         20
+        ],
+        "lab": [
+         28,
+         46,
+         25.83,
+         20
+        ],
+        "line": [
+         47,
+         18
+        ],
+        "fs": "14px",
+        "lh": "20.000401px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -1,
+        "spillBot": -1
+       },
+       {
+        "t": "Week",
+        "seg": [
+         63.83,
+         46,
+         52.56,
+         20
+        ],
+        "lab": [
+         71.83,
+         46,
+         36.56,
+         20
+        ],
+        "line": [
+         47,
+         18
+        ],
+        "fs": "14px",
+        "lh": "20.000401px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -1,
+        "spillBot": -1
+       },
+       {
+        "t": "Month",
+        "seg": [
+         118.39,
+         46,
+         58.19,
+         20
+        ],
+        "lab": [
+         126.39,
+         46,
+         42.19,
+         20
+        ],
+        "line": [
+         47,
+         18
+        ],
+        "fs": "14px",
+        "lh": "20.000401px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -1,
+        "spillBot": -1
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       120,
+       201.81,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         124,
+         53.09,
+         24
+        ],
+        "lab": [
+         32,
+         124,
+         29.09,
+         24
+        ],
+        "line": [
+         126,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "Week",
+        "seg": [
+         75.09,
+         124,
+         65.22,
+         24
+        ],
+        "lab": [
+         87.09,
+         124,
+         41.22,
+         24
+        ],
+        "line": [
+         126,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       },
+       {
+        "t": "Month",
+        "seg": [
+         142.31,
+         124,
+         71.5,
+         24
+        ],
+        "lab": [
+         154.31,
+         124,
+         47.5,
+         24
+        ],
+        "line": [
+         126,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -2,
+        "spillBot": -2
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       202,
+       201.81,
+       36
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         206,
+         53.09,
+         28
+        ],
+        "lab": [
+         32,
+         208,
+         29.09,
+         24
+        ],
+        "line": [
+         210,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -4
+       },
+       {
+        "t": "Week",
+        "seg": [
+         75.09,
+         206,
+         65.22,
+         28
+        ],
+        "lab": [
+         87.09,
+         208,
+         41.22,
+         24
+        ],
+        "line": [
+         210,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -4
+       },
+       {
+        "t": "Month",
+        "seg": [
+         142.31,
+         206,
+         71.5,
+         28
+        ],
+        "lab": [
+         154.31,
+         208,
+         47.5,
+         24
+        ],
+        "line": [
+         210,
+         20
+        ],
+        "fs": "16px",
+        "lh": "24px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -4
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX3",
+   "build": "main",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryAccessibilityXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "40px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       28,
+       303.91,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         32,
+         96.11,
+         24
+        ],
+        "lab": [
+         32,
+         16,
+         72.11,
+         56
+        ],
+        "line": [
+         21,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 11,
+        "spillBot": 11
+       },
+       {
+        "t": "List",
+        "seg": [
+         118.11,
+         32,
+         83.8,
+         24
+        ],
+        "lab": [
+         130.11,
+         16,
+         59.8,
+         56
+        ],
+        "line": [
+         21,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 11,
+        "spillBot": 11
+       },
+       {
+        "t": "Table",
+        "seg": [
+         203.91,
+         32,
+         112,
+         24
+        ],
+        "lab": [
+         215.91,
+         16,
+         88,
+         56
+        ],
+        "line": [
+         21,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 11,
+        "spillBot": 11
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX3",
+   "build": "main",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryAccessibilityXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "40px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       57,
+       312.58,
+       28
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         61,
+         79.05,
+         20
+        ],
+        "lab": [
+         28,
+         46,
+         63.05,
+         50
+        ],
+        "line": [
+         49,
+         43
+        ],
+        "fs": "35.539001px",
+        "lh": "50.771015px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 12,
+        "spillBot": 11
+       },
+       {
+        "t": "Week",
+        "seg": [
+         101.05,
+         61,
+         104.11,
+         20
+        ],
+        "lab": [
+         109.05,
+         46,
+         88.11,
+         50
+        ],
+        "line": [
+         49,
+         43
+        ],
+        "fs": "35.539001px",
+        "lh": "50.771015px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 12,
+        "spillBot": 11
+       },
+       {
+        "t": "Month",
+        "seg": [
+         207.16,
+         61,
+         117.42,
+         20
+        ],
+        "lab": [
+         215.16,
+         46,
+         101.42,
+         50
+        ],
+        "line": [
+         49,
+         43
+        ],
+        "fs": "35.539001px",
+        "lh": "50.771015px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 12,
+        "spillBot": 11
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       160,
+       351.34,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         164,
+         90.73,
+         24
+        ],
+        "lab": [
+         32,
+         148,
+         66.73,
+         56
+        ],
+        "line": [
+         153,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 11,
+        "spillBot": 11
+       },
+       {
+        "t": "Week",
+        "seg": [
+         112.73,
+         164,
+         117.27,
+         24
+        ],
+        "lab": [
+         124.73,
+         148,
+         93.27,
+         56
+        ],
+        "line": [
+         153,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 11,
+        "spillBot": 11
+       },
+       {
+        "t": "Month",
+        "seg": [
+         232,
+         164,
+         131.34,
+         24
+        ],
+        "lab": [
+         244,
+         148,
+         107.34,
+         56
+        ],
+        "line": [
+         153,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 11,
+        "spillBot": 11
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       264,
+       351.34,
+       36
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         268,
+         90.73,
+         28
+        ],
+        "lab": [
+         32,
+         254,
+         66.73,
+         56
+        ],
+        "line": [
+         259,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 9,
+        "spillBot": 9
+       },
+       {
+        "t": "Week",
+        "seg": [
+         112.73,
+         268,
+         117.27,
+         28
+        ],
+        "lab": [
+         124.73,
+         254,
+         93.27,
+         56
+        ],
+        "line": [
+         259,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 9,
+        "spillBot": 9
+       },
+       {
+        "t": "Month",
+        "seg": [
+         232,
+         268,
+         131.34,
+         28
+        ],
+        "lab": [
+         244,
+         254,
+         107.34,
+         56
+        ],
+        "line": [
+         259,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 9,
+        "spillBot": 9
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX3",
+   "build": "head",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryAccessibilityXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "40px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       16,
+       303.91,
+       64
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         20,
+         96.11,
+         56
+        ],
+        "lab": [
+         32,
+         20,
+         72.11,
+         56
+        ],
+        "line": [
+         25,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       },
+       {
+        "t": "List",
+        "seg": [
+         118.11,
+         20,
+         83.8,
+         56
+        ],
+        "lab": [
+         130.11,
+         20,
+         59.8,
+         56
+        ],
+        "line": [
+         25,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       },
+       {
+        "t": "Table",
+        "seg": [
+         203.91,
+         20,
+         112,
+         56
+        ],
+        "lab": [
+         215.91,
+         20,
+         88,
+         56
+        ],
+        "line": [
+         25,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX3",
+   "build": "head",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryAccessibilityXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "40px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       42,
+       312.58,
+       58
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         46,
+         79.05,
+         50
+        ],
+        "lab": [
+         28,
+         46,
+         63.05,
+         50
+        ],
+        "line": [
+         49,
+         43
+        ],
+        "fs": "35.539001px",
+        "lh": "50.771015px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -3,
+        "spillBot": -4
+       },
+       {
+        "t": "Week",
+        "seg": [
+         101.05,
+         46,
+         104.11,
+         50
+        ],
+        "lab": [
+         109.05,
+         46,
+         88.11,
+         50
+        ],
+        "line": [
+         49,
+         43
+        ],
+        "fs": "35.539001px",
+        "lh": "50.771015px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -3,
+        "spillBot": -4
+       },
+       {
+        "t": "Month",
+        "seg": [
+         207.16,
+         46,
+         117.42,
+         50
+        ],
+        "lab": [
+         215.16,
+         46,
+         101.42,
+         50
+        ],
+        "line": [
+         49,
+         43
+        ],
+        "fs": "35.539001px",
+        "lh": "50.771015px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -3,
+        "spillBot": -4
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       150,
+       351.34,
+       64
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         154,
+         90.73,
+         56
+        ],
+        "lab": [
+         32,
+         154,
+         66.73,
+         56
+        ],
+        "line": [
+         159,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       },
+       {
+        "t": "Week",
+        "seg": [
+         112.73,
+         154,
+         117.27,
+         56
+        ],
+        "lab": [
+         124.73,
+         154,
+         93.27,
+         56
+        ],
+        "line": [
+         159,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       },
+       {
+        "t": "Month",
+        "seg": [
+         232,
+         154,
+         131.34,
+         56
+        ],
+        "lab": [
+         244,
+         154,
+         107.34,
+         56
+        ],
+        "line": [
+         159,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       264,
+       351.34,
+       64
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         268,
+         90.73,
+         56
+        ],
+        "lab": [
+         32,
+         268,
+         66.73,
+         56
+        ],
+        "line": [
+         273,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       },
+       {
+        "t": "Week",
+        "seg": [
+         112.73,
+         268,
+         117.27,
+         56
+        ],
+        "lab": [
+         124.73,
+         268,
+         93.27,
+         56
+        ],
+        "line": [
+         273,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       },
+       {
+        "t": "Month",
+        "seg": [
+         232,
+         268,
+         131.34,
+         56
+        ],
+        "lab": [
+         244,
+         268,
+         107.34,
+         56
+        ],
+        "line": [
+         273,
+         46
+        ],
+        "fs": "37.6464px",
+        "lh": "56.469601px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -5,
+        "spillBot": -5
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX4",
+   "build": "head",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryAccessibilityXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "47px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       16,
+       341.27,
+       74
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         20,
+         108.38,
+         66
+        ],
+        "lab": [
+         32,
+         20,
+         84.38,
+         66
+        ],
+        "line": [
+         26,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       },
+       {
+        "t": "List",
+        "seg": [
+         130.38,
+         20,
+         93.92,
+         66
+        ],
+        "lab": [
+         142.38,
+         20,
+         69.92,
+         66
+        ],
+        "line": [
+         26,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       },
+       {
+        "t": "Table",
+        "seg": [
+         226.3,
+         20,
+         126.97,
+         66
+        ],
+        "lab": [
+         238.3,
+         20,
+         102.97,
+         66
+        ],
+        "line": [
+         26,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX4",
+   "build": "head",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryAccessibilityXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "47px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       44,
+       350.13,
+       66
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         48,
+         88.42,
+         58
+        ],
+        "lab": [
+         28,
+         48,
+         72.42,
+         58
+        ],
+        "line": [
+         52,
+         49
+        ],
+        "fs": "40.923401px",
+        "lh": "58.463169px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -5
+       },
+       {
+        "t": "Week",
+        "seg": [
+         110.42,
+         48,
+         117.22,
+         58
+        ],
+        "lab": [
+         118.42,
+         48,
+         101.22,
+         58
+        ],
+        "line": [
+         52,
+         49
+        ],
+        "fs": "40.923401px",
+        "lh": "58.463169px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -5
+       },
+       {
+        "t": "Month",
+        "seg": [
+         229.64,
+         48,
+         132.48,
+         58
+        ],
+        "lab": [
+         237.64,
+         48,
+         116.48,
+         58
+        ],
+        "line": [
+         52,
+         49
+        ],
+        "fs": "40.923401px",
+        "lh": "58.463169px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -5
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       160,
+       382,
+       74
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         164,
+         98.38,
+         66
+        ],
+        "lab": [
+         32,
+         164,
+         74.38,
+         66
+        ],
+        "line": [
+         170,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         164,
+         127.97,
+         66
+        ],
+        "lab": [
+         132.38,
+         164,
+         103.97,
+         66
+        ],
+        "line": [
+         170,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.34,
+         164,
+         143.66,
+         66
+        ],
+        "lab": [
+         262.34,
+         164,
+         119.66,
+         66
+        ],
+        "line": [
+         170,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       284,
+       382,
+       74
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         288,
+         98.38,
+         66
+        ],
+        "lab": [
+         32,
+         288,
+         74.38,
+         66
+        ],
+        "line": [
+         294,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         288,
+         127.97,
+         66
+        ],
+        "lab": [
+         132.38,
+         288,
+         103.97,
+         66
+        ],
+        "line": [
+         294,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.34,
+         288,
+         143.66,
+         66
+        ],
+        "lab": [
+         262.34,
+         288,
+         119.66,
+         66
+        ],
+        "line": [
+         294,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -6
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX4",
+   "build": "main",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryAccessibilityXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "47px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       33,
+       341.27,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         37,
+         108.38,
+         24
+        ],
+        "lab": [
+         32,
+         16,
+         84.38,
+         66
+        ],
+        "line": [
+         22,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 15
+       },
+       {
+        "t": "List",
+        "seg": [
+         130.38,
+         37,
+         93.92,
+         24
+        ],
+        "lab": [
+         142.38,
+         16,
+         69.92,
+         66
+        ],
+        "line": [
+         22,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 15
+       },
+       {
+        "t": "Table",
+        "seg": [
+         226.3,
+         37,
+         126.97,
+         24
+        ],
+        "lab": [
+         238.3,
+         16,
+         102.97,
+         66
+        ],
+        "line": [
+         22,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 15
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX4",
+   "build": "main",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryAccessibilityXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "47px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       63,
+       350.13,
+       28
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         67,
+         88.42,
+         20
+        ],
+        "lab": [
+         28,
+         48,
+         72.42,
+         58
+        ],
+        "line": [
+         52,
+         49
+        ],
+        "fs": "40.923401px",
+        "lh": "58.463169px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 14
+       },
+       {
+        "t": "Week",
+        "seg": [
+         110.42,
+         67,
+         117.22,
+         20
+        ],
+        "lab": [
+         118.42,
+         48,
+         101.22,
+         58
+        ],
+        "line": [
+         52,
+         49
+        ],
+        "fs": "40.923401px",
+        "lh": "58.463169px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 14
+       },
+       {
+        "t": "Month",
+        "seg": [
+         229.64,
+         67,
+         132.48,
+         20
+        ],
+        "lab": [
+         237.64,
+         48,
+         116.48,
+         58
+        ],
+        "line": [
+         52,
+         49
+        ],
+        "fs": "40.923401px",
+        "lh": "58.463169px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 14
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       175,
+       382,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         179,
+         98.38,
+         24
+        ],
+        "lab": [
+         32,
+         158,
+         74.38,
+         66
+        ],
+        "line": [
+         164,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 15
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         179,
+         127.97,
+         24
+        ],
+        "lab": [
+         132.38,
+         158,
+         103.97,
+         66
+        ],
+        "line": [
+         164,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 15
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.34,
+         179,
+         143.66,
+         24
+        ],
+        "lab": [
+         262.34,
+         158,
+         119.66,
+         66
+        ],
+        "line": [
+         164,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 15,
+        "spillBot": 15
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       289,
+       382,
+       36
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         293,
+         98.38,
+         28
+        ],
+        "lab": [
+         32,
+         274,
+         74.38,
+         66
+        ],
+        "line": [
+         280,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 13,
+        "spillBot": 13
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         293,
+         127.97,
+         28
+        ],
+        "lab": [
+         132.38,
+         274,
+         103.97,
+         66
+        ],
+        "line": [
+         280,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 13,
+        "spillBot": 13
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.34,
+         293,
+         143.66,
+         28
+        ],
+        "lab": [
+         262.34,
+         274,
+         119.66,
+         66
+        ],
+        "line": [
+         280,
+         54
+        ],
+        "fs": "44.235199px",
+        "lh": "66.352798px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 13,
+        "spillBot": 13
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX5",
+   "build": "main",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryAccessibilityXXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "53px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       37,
+       373.47,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         41,
+         118.95,
+         24
+        ],
+        "lab": [
+         32,
+         16,
+         94.95,
+         74
+        ],
+        "line": [
+         22,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 19,
+        "spillBot": 18
+       },
+       {
+        "t": "List",
+        "seg": [
+         140.95,
+         41,
+         102.66,
+         24
+        ],
+        "lab": [
+         152.95,
+         16,
+         78.66,
+         74
+        ],
+        "line": [
+         22,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 19,
+        "spillBot": 18
+       },
+       {
+        "t": "Table",
+        "seg": [
+         245.61,
+         41,
+         139.86,
+         24
+        ],
+        "lab": [
+         257.61,
+         16,
+         115.86,
+         74
+        ],
+        "line": [
+         22,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": 19,
+        "spillBot": 18
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX5",
+   "build": "main",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryAccessibilityXXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+   "probe": {
+    "href": "<the Production deploy of 3d313c66>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "3d313c666b6cc67e6610dd568581de295b940e64",
+    "bf": "53px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       66,
+       382,
+       28
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         70,
+         96.38,
+         20
+        ],
+        "lab": [
+         28,
+         46.5,
+         80.38,
+         67
+        ],
+        "line": [
+         50.5,
+         58
+        ],
+        "fs": "47.384399px",
+        "lh": "67.693352px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 19.5,
+        "spillBot": 18.5
+       },
+       {
+        "t": "Week",
+        "seg": [
+         118.38,
+         70,
+         128.36,
+         20
+        ],
+        "lab": [
+         126.38,
+         46.5,
+         112.36,
+         67
+        ],
+        "line": [
+         50.5,
+         58
+        ],
+        "fs": "47.384399px",
+        "lh": "67.693352px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 19.5,
+        "spillBot": 18.5
+       },
+       {
+        "t": "Month",
+        "seg": [
+         248.73,
+         70,
+         145.28,
+         20
+        ],
+        "lab": [
+         256.73,
+         46.5,
+         129.28,
+         67
+        ],
+        "line": [
+         50.5,
+         58
+        ],
+        "fs": "47.384399px",
+        "lh": "67.693352px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 19.5,
+        "spillBot": 18.5
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       187,
+       382,
+       32
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         191,
+         98.38,
+         24
+        ],
+        "lab": [
+         32,
+         166,
+         74.38,
+         74
+        ],
+        "line": [
+         172,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 19,
+        "spillBot": 18
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         191,
+         127.98,
+         24
+        ],
+        "lab": [
+         132.38,
+         166,
+         103.98,
+         74
+        ],
+        "line": [
+         172,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 19,
+        "spillBot": 18
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.36,
+         191,
+         143.64,
+         24
+        ],
+        "lab": [
+         262.36,
+         166,
+         119.64,
+         74
+        ],
+        "line": [
+         172,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 19,
+        "spillBot": 18
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       309,
+       382,
+       36
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         313,
+         98.38,
+         28
+        ],
+        "lab": [
+         32,
+         290,
+         74.38,
+         74
+        ],
+        "line": [
+         296,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 17,
+        "spillBot": 16
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         313,
+         127.98,
+         28
+        ],
+        "lab": [
+         132.38,
+         290,
+         103.98,
+         74
+        ],
+        "line": [
+         296,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 17,
+        "spillBot": 16
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.36,
+         313,
+         143.64,
+         28
+        ],
+        "lab": [
+         262.36,
+         290,
+         119.64,
+         74
+        ],
+        "line": [
+         296,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": 17,
+        "spillBot": 16
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX5",
+   "build": "head",
+   "story": "core-segmentedcontrol--default",
+   "category": "UICTContentSizeCategoryAccessibilityXXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--default&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "53px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       16,
+       373.47,
+       82
+      ],
+      "segs": [
+       {
+        "t": "Grid",
+        "seg": [
+         20,
+         20,
+         118.95,
+         74
+        ],
+        "lab": [
+         32,
+         20,
+         94.95,
+         74
+        ],
+        "line": [
+         26,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       },
+       {
+        "t": "List",
+        "seg": [
+         140.95,
+         20,
+         102.66,
+         74
+        ],
+        "lab": [
+         152.95,
+         20,
+         78.66,
+         74
+        ],
+        "line": [
+         26,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       },
+       {
+        "t": "Table",
+        "seg": [
+         245.61,
+         20,
+         139.86,
+         74
+        ],
+        "lab": [
+         257.61,
+         20,
+         115.86,
+         74
+        ],
+        "line": [
+         26,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": false,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "size": "AX5",
+   "build": "head",
+   "story": "core-segmentedcontrol--size-variants",
+   "category": "UICTContentSizeCategoryAccessibilityXXXL",
+   "prefReadback": "UICTContentSizeCategoryAccessibilityXXXL",
+   "probe": {
+    "href": "<the preview deploy of d492c143>/storybook/iframe.html?id=core-segmentedcontrol--size-variants&viewMode=story",
+    "v": "d492c14372604dc8950a2f03ae56bd3ed28b6f5c",
+    "bf": "53px",
+    "iw": 414,
+    "ih": 689,
+    "dpr": 2,
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.2 Mobile/15E148 Safari/604.1",
+    "G": [
+     {
+      "track": [
+       16,
+       42,
+       382,
+       75
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         46,
+         96.38,
+         67
+        ],
+        "lab": [
+         28,
+         46,
+         80.38,
+         67
+        ],
+        "line": [
+         50,
+         58
+        ],
+        "fs": "47.384399px",
+        "lh": "67.693352px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -5
+       },
+       {
+        "t": "Week",
+        "seg": [
+         118.38,
+         46,
+         128.36,
+         67
+        ],
+        "lab": [
+         126.38,
+         46,
+         112.36,
+         67
+        ],
+        "line": [
+         50,
+         58
+        ],
+        "fs": "47.384399px",
+        "lh": "67.693352px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -5
+       },
+       {
+        "t": "Month",
+        "seg": [
+         248.73,
+         46,
+         145.28,
+         67
+        ],
+        "lab": [
+         256.73,
+         46,
+         129.28,
+         67
+        ],
+        "line": [
+         50,
+         58
+        ],
+        "fs": "47.384399px",
+        "lh": "67.693352px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -4,
+        "spillBot": -5
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       167,
+       382,
+       82
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         171,
+         98.38,
+         74
+        ],
+        "lab": [
+         32,
+         171,
+         74.38,
+         74
+        ],
+        "line": [
+         177,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         171,
+         127.98,
+         74
+        ],
+        "lab": [
+         132.38,
+         171,
+         103.98,
+         74
+        ],
+        "line": [
+         177,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.36,
+         171,
+         143.64,
+         74
+        ],
+        "lab": [
+         262.36,
+         171,
+         119.64,
+         74
+        ],
+        "line": [
+         177,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       }
+      ]
+     },
+     {
+      "track": [
+       16,
+       299,
+       382,
+       82
+      ],
+      "segs": [
+       {
+        "t": "Day",
+        "seg": [
+         20,
+         303,
+         98.38,
+         74
+        ],
+        "lab": [
+         32,
+         303,
+         74.38,
+         74
+        ],
+        "line": [
+         309,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       },
+       {
+        "t": "Week",
+        "seg": [
+         120.38,
+         303,
+         127.98,
+         74
+        ],
+        "lab": [
+         132.38,
+         303,
+         103.98,
+         74
+        ],
+        "line": [
+         309,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       },
+       {
+        "t": "Month",
+        "seg": [
+         250.36,
+         303,
+         143.64,
+         74
+        ],
+        "lab": [
+         262.36,
+         303,
+         119.64,
+         74
+        ],
+        "line": [
+         309,
+         61
+        ],
+        "fs": "49.881599px",
+        "lh": "74.822395px",
+        "ell": true,
+        "ov": "visible",
+        "spillTop": -6,
+        "spillBot": -7
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}
