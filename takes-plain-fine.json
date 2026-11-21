@@ -1,0 +1,457 @@
+{
+ "label": "ob2",
+ "base": "<the preview deploy of 5ee6cafd>",
+ "story": "core-selector--overlay-beside-keyboard",
+ "takes": [
+  {
+   "case": "A",
+   "k": 1,
+   "trigger": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1101
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 8,
+   "note": "TL n:16 kb:699 ih:699 || 9233 touchend 141,156 input:@144/168 kb699 ; 9265 focusin input:@144/168 kb699 ; 9267 click 141,156 input:@144/168 kb699 ; 9332 vv h389 top0 kb389 ; 19286 pointerdown 129,312 span:Banana@302/322 kb389 ; 19287 touchstart 129,312 span:Banana@302/322 kb389 ; 19345 pointerup 129,312 span:Banana@302/322 kb389 ; 19346 touchend 129,312 span:Banana@302/322 kb389 ; 19354 focusout input:@144/168 kb389 ; 19356 focusin button[combobox]:Banana@302/322 kb389 ; 19357 click 129,312 span:Banana@302/322 kb389 ; 19831 vv h699 top0 kb699, note",
+   "options": [
+    "Other:Apple@206",
+    "Other:Banana@242",
+    "Other:Cherry@278"
+   ],
+   "shot": "A1-open.png"
+  },
+  {
+   "case": "A",
+   "k": 2,
+   "trigger": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1532
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 8,
+   "note": "TL n:36 kb:699 ih:699 || 31481 focusout button[combobox]:Elderberry@302/322 kb699 ; 31488 focusin input:@144/168 kb699 ; 31490 click 141,156 input:@144/168 kb699 ; 31574 vv h389 top0 kb389 ; 36614 pointerdown 129,312 span:Elderberry@302/322 kb389 ; 36615 touchstart 129,312 span:Elderberry@302/322 kb389 ; 36676 pointerup 129,312 span:Elderberry@302/322 kb389 ; 36676 touchend 129,312 span:Elderberry@302/322 kb389 ; 36681 focusout input:@144/168 kb389 ; 36681 focusin button[combobox]:Elderberry@302/322 kb389 ; 36682 click 129,312 span:Elderberry@302/322 kb389 ; 37149 vv h699 top0 kb699, note",
+   "options": [
+    "Other:Apple@196",
+    "Other:Banana@232",
+    "Other:Cherry@268"
+   ],
+   "shot": "A2-open.png"
+  },
+  {
+   "case": "A",
+   "k": 3,
+   "trigger": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1672
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 8,
+   "note": "TL n:56 kb:699 ih:699 || 47080 focusout button[combobox]:Elderberry@302/322 kb699 ; 47090 focusin input:@144/168 kb699 ; 47093 click 141,156 input:@144/168 kb699 ; 47170 vv h389 top0 kb389 ; 52328 pointerdown 129,312 span:Elderberry@302/322 kb389 ; 52329 touchstart 129,312 span:Elderberry@302/322 kb389 ; 52389 pointerup 129,312 span:Elderberry@302/322 kb389 ; 52390 touchend 129,312 span:Elderberry@302/322 kb389 ; 52395 focusout input:@144/168 kb389 ; 52396 focusin button[combobox]:Elderberry@302/322 kb389 ; 52397 click 129,312 span:Elderberry@302/322 kb389 ; 52872 vv h699 top0 kb699, note",
+   "options": [
+    "Other:Apple@196",
+    "Other:Banana@232",
+    "Other:Cherry@268"
+   ],
+   "shot": "A3-open.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 419,
+   "tap": {
+    "x": 195,
+    "y": 419,
+    "callMs": 1517
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:69 kb:699 ih:699 || 57766 touchstart 129,312 span:Elderberry@299/323 kb699 ; 57821 pointerup 129,312 span:Elderberry@299/323 kb699 ; 57832 touchend 129,312 span:Elderberry@0/0 kb699 ; 62947 pointerdown 141,156 input:@144/168 kb699 ; 62948 touchstart 141,156 input:@144/168 kb699 ; 63006 pointerup 141,156 input:@144/168 kb699 ; 63007 touchend 141,156 input:@144/168 kb699 ; 63011 focusout button[combobox]:Elderberry@302/322 kb699 ; 63021 focusin input:@144/168 kb699 ; 63023 click 141,156 input:@144/168 kb699 ; 63097 vv h389 top0 kb389 ; 68622 vv h699 top0 kb699, note",
+   "shot": "B195-419.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 420,
+   "tap": {
+    "x": 195,
+    "y": 420,
+    "callMs": 1592
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:76 kb:699 ih:699 || 63011 focusout button[combobox]:Elderberry@302/322 kb699 ; 63021 focusin input:@144/168 kb699 ; 63023 click 141,156 input:@144/168 kb699 ; 63097 vv h389 top0 kb389 ; 68622 vv h699 top0 kb699 ; 76525 pointerdown 141,156 input:@144/168 kb699 ; 76527 touchstart 141,156 input:@144/168 kb699 ; 76586 pointerup 141,156 input:@144/168 kb699 ; 76587 touchend 141,156 input:@144/168 kb699 ; 76603 click 141,156 input:@144/168 kb699 ; 76678 vv h389 top0 kb389 ; 82190 vv h699 top0 kb699, note",
+   "shot": "B195-420.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 421,
+   "tap": {
+    "x": 195,
+    "y": 421,
+    "callMs": 1714
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:83 kb:699 ih:699 || 76586 pointerup 141,156 input:@144/168 kb699 ; 76587 touchend 141,156 input:@144/168 kb699 ; 76603 click 141,156 input:@144/168 kb699 ; 76678 vv h389 top0 kb389 ; 82190 vv h699 top0 kb699 ; 90013 pointerdown 141,156 input:@144/168 kb699 ; 90014 touchstart 141,156 input:@144/168 kb699 ; 90089 pointerup 141,156 input:@144/168 kb699 ; 90090 touchend 141,156 input:@144/168 kb699 ; 90107 click 141,156 input:@144/168 kb699 ; 90182 vv h389 top0 kb389 ; 95892 vv h699 top0 kb699, note",
+   "shot": "B195-421.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 422,
+   "tap": {
+    "x": 195,
+    "y": 422,
+    "callMs": 1560
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:90 kb:699 ih:699 || 90089 pointerup 141,156 input:@144/168 kb699 ; 90090 touchend 141,156 input:@144/168 kb699 ; 90107 click 141,156 input:@144/168 kb699 ; 90182 vv h389 top0 kb389 ; 95892 vv h699 top0 kb699 ; 103727 pointerdown 141,156 input:@144/168 kb699 ; 103728 touchstart 141,156 input:@144/168 kb699 ; 103801 pointerup 141,156 input:@144/168 kb699 ; 103802 touchend 141,156 input:@144/168 kb699 ; 103819 click 141,156 input:@144/168 kb699 ; 103895 vv h389 top0 kb389 ; 109417 vv h699 top0 kb699, note",
+   "shot": "B195-422.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 423,
+   "tap": {
+    "x": 195,
+    "y": 423,
+    "callMs": 1587
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:97 kb:699 ih:699 || 103801 pointerup 141,156 input:@144/168 kb699 ; 103802 touchend 141,156 input:@144/168 kb699 ; 103819 click 141,156 input:@144/168 kb699 ; 103895 vv h389 top0 kb389 ; 109417 vv h699 top0 kb699 ; 117341 pointerdown 141,156 input:@144/168 kb699 ; 117342 touchstart 141,156 input:@144/168 kb699 ; 117395 pointerup 141,156 input:@144/168 kb699 ; 117396 touchend 141,156 input:@144/168 kb699 ; 117412 click 141,156 input:@144/168 kb699 ; 117488 vv h389 top0 kb389 ; 123115 vv h699 top0 kb699, note",
+   "shot": "B195-423.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 424,
+   "tap": {
+    "x": 195,
+    "y": 424,
+    "callMs": 1572
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:104 kb:699 ih:699 || 117395 pointerup 141,156 input:@144/168 kb699 ; 117396 touchend 141,156 input:@144/168 kb699 ; 117412 click 141,156 input:@144/168 kb699 ; 117488 vv h389 top0 kb389 ; 123115 vv h699 top0 kb699 ; 130888 pointerdown 141,156 input:@144/168 kb699 ; 130889 touchstart 141,156 input:@144/168 kb699 ; 130963 pointerup 141,156 input:@144/168 kb699 ; 130964 touchend 141,156 input:@144/168 kb699 ; 130980 click 141,156 input:@144/168 kb699 ; 131056 vv h389 top0 kb389 ; 136546 vv h699 top0 kb699, note",
+   "shot": "B195-424.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 425,
+   "tap": {
+    "x": 195,
+    "y": 425,
+    "callMs": 1516
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:111 kb:699 ih:699 || 130963 pointerup 141,156 input:@144/168 kb699 ; 130964 touchend 141,156 input:@144/168 kb699 ; 130980 click 141,156 input:@144/168 kb699 ; 131056 vv h389 top0 kb389 ; 136546 vv h699 top0 kb699 ; 144566 pointerdown 141,156 input:@144/168 kb699 ; 144567 touchstart 141,156 input:@144/168 kb699 ; 144624 pointerup 141,156 input:@144/168 kb699 ; 144625 touchend 141,156 input:@144/168 kb699 ; 144635 click 141,156 input:@144/168 kb699 ; 144723 vv h389 top0 kb389 ; 150172 vv h699 top0 kb699, note",
+   "shot": "B195-425.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 428,
+   "tap": {
+    "x": 195,
+    "y": 428,
+    "callMs": 1556
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:118 kb:699 ih:699 || 144624 pointerup 141,156 input:@144/168 kb699 ; 144625 touchend 141,156 input:@144/168 kb699 ; 144635 click 141,156 input:@144/168 kb699 ; 144723 vv h389 top0 kb389 ; 150172 vv h699 top0 kb699 ; 157799 pointerdown 141,156 input:@144/168 kb699 ; 157800 touchstart 141,156 input:@144/168 kb699 ; 157852 pointerup 141,156 input:@144/168 kb699 ; 157853 touchend 141,156 input:@144/168 kb699 ; 157868 click 141,156 input:@144/168 kb699 ; 157952 vv h389 top0 kb389 ; 163436 vv h699 top0 kb699, note",
+   "shot": "B195-428.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 433,
+   "tap": {
+    "x": 195,
+    "y": 433,
+    "callMs": 1527
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:125 kb:699 ih:699 || 157852 pointerup 141,156 input:@144/168 kb699 ; 157853 touchend 141,156 input:@144/168 kb699 ; 157868 click 141,156 input:@144/168 kb699 ; 157952 vv h389 top0 kb389 ; 163436 vv h699 top0 kb699 ; 171193 pointerdown 141,156 input:@144/168 kb699 ; 171194 touchstart 141,156 input:@144/168 kb699 ; 171247 pointerup 141,156 input:@144/168 kb699 ; 171248 touchend 141,156 input:@144/168 kb699 ; 171263 click 141,156 input:@144/168 kb699 ; 171347 vv h389 top0 kb389 ; 176814 vv h699 top0 kb699, note",
+   "shot": "B195-433.png"
+  },
+  {
+   "case": "B",
+   "x": 195,
+   "y": 435,
+   "tap": {
+    "x": 195,
+    "y": 435,
+    "callMs": 1535
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:132 kb:699 ih:699 || 171247 pointerup 141,156 input:@144/168 kb699 ; 171248 touchend 141,156 input:@144/168 kb699 ; 171263 click 141,156 input:@144/168 kb699 ; 171347 vv h389 top0 kb389 ; 176814 vv h699 top0 kb699 ; 184308 pointerdown 141,156 input:@144/168 kb699 ; 184309 touchstart 141,156 input:@144/168 kb699 ; 184360 pointerup 141,156 input:@144/168 kb699 ; 184361 touchend 141,156 input:@144/168 kb699 ; 184375 click 141,156 input:@144/168 kb699 ; 184450 vv h389 top0 kb389 ; 190013 vv h699 top0 kb699, note",
+   "shot": "B195-435.png"
+  },
+  {
+   "case": "B",
+   "x": 60,
+   "y": 410,
+   "tap": {
+    "x": 60,
+    "y": 410,
+    "callMs": 1501
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 7,
+   "note": "TL n:145 kb:699 ih:699 || 197599 touchstart 141,156 input:@144/168 kb699 ; 197661 pointerup 141,156 input:@144/168 kb699 ; 197662 touchend 141,156 input:@144/168 kb699 ; 197682 click 141,156 input:@144/168 kb699 ; 197761 vv h389 top0 kb389 ; 202748 pointerdown 60,363 html:@layer_reset@0/344 kb389 ; 202749 touchstart 60,363 html:@layer_reset@0/344 kb389 ; 202808 pointerup 60,363 html:@layer_reset@0/344 kb389 ; 202809 touchend 60,363 html:@layer_reset@0/344 kb389 ; 202846 focusout input:@144/168 kb389 ; 202848 click 60,363 html:@layer_reset@0/344 kb389 ; 203324 vv h699 top0 kb699, note",
+   "shot": "B60-410.png"
+  },
+  {
+   "case": "B",
+   "x": 60,
+   "y": 422,
+   "tap": {
+    "x": 60,
+    "y": 422,
+    "callMs": 1748
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:153 kb:699 ih:699 || 202809 touchend 60,363 html:@layer_reset@0/344 kb389 ; 202846 focusout input:@144/168 kb389 ; 202848 click 60,363 html:@layer_reset@0/344 kb389 ; 203324 vv h699 top0 kb699 ; 210868 pointerdown 141,156 input:@144/168 kb699 ; 210869 touchstart 141,156 input:@144/168 kb699 ; 210923 pointerup 141,156 input:@144/168 kb699 ; 210924 touchend 141,156 input:@144/168 kb699 ; 210932 focusin input:@144/168 kb699 ; 210935 click 141,156 input:@144/168 kb699 ; 211022 vv h389 top0 kb389 ; 216778 vv h699 top0 kb699, note",
+   "shot": "B60-422.png"
+  },
+  {
+   "case": "B",
+   "x": 60,
+   "y": 426,
+   "tap": {
+    "x": 60,
+    "y": 426,
+    "callMs": 1583
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:160 kb:699 ih:699 || 210924 touchend 141,156 input:@144/168 kb699 ; 210932 focusin input:@144/168 kb699 ; 210935 click 141,156 input:@144/168 kb699 ; 211022 vv h389 top0 kb389 ; 216778 vv h699 top0 kb699 ; 224584 pointerdown 141,156 input:@144/168 kb699 ; 224586 touchstart 141,156 input:@144/168 kb699 ; 224655 pointerup 141,156 input:@144/168 kb699 ; 224656 touchend 141,156 input:@144/168 kb699 ; 224672 click 141,156 input:@144/168 kb699 ; 224749 vv h389 top0 kb389 ; 230320 vv h699 top0 kb699, note",
+   "shot": "B60-426.png"
+  },
+  {
+   "case": "B",
+   "x": 330,
+   "y": 410,
+   "tap": {
+    "x": 330,
+    "y": 410,
+    "callMs": 1480
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 7,
+   "note": "TL n:173 kb:699 ih:699 || 238029 touchstart 141,156 input:@144/168 kb699 ; 238105 pointerup 141,156 input:@144/168 kb699 ; 238106 touchend 141,156 input:@144/168 kb699 ; 238122 click 141,156 input:@144/168 kb699 ; 238198 vv h389 top0 kb389 ; 243258 pointerdown 330,363 html:@layer_reset@0/344 kb389 ; 243259 touchstart 330,363 html:@layer_reset@0/344 kb389 ; 243318 pointerup 330,363 html:@layer_reset@0/344 kb389 ; 243319 touchend 330,363 html:@layer_reset@0/344 kb389 ; 243356 focusout input:@144/168 kb389 ; 243358 click 330,363 html:@layer_reset@0/344 kb389 ; 243834 vv h699 top0 kb699, note",
+   "shot": "B330-410.png"
+  },
+  {
+   "case": "B",
+   "x": 330,
+   "y": 422,
+   "tap": {
+    "x": 330,
+    "y": 422,
+    "callMs": 1633
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:181 kb:699 ih:699 || 243319 touchend 330,363 html:@layer_reset@0/344 kb389 ; 243356 focusout input:@144/168 kb389 ; 243358 click 330,363 html:@layer_reset@0/344 kb389 ; 243834 vv h699 top0 kb699 ; 251429 pointerdown 141,156 input:@144/168 kb699 ; 251430 touchstart 141,156 input:@144/168 kb699 ; 251481 pointerup 141,156 input:@144/168 kb699 ; 251482 touchend 141,156 input:@144/168 kb699 ; 251490 focusin input:@144/168 kb699 ; 251493 click 141,156 input:@144/168 kb699 ; 251581 vv h389 top0 kb389 ; 257235 vv h699 top0 kb699, note",
+   "shot": "B330-422.png"
+  },
+  {
+   "case": "B",
+   "x": 330,
+   "y": 426,
+   "tap": {
+    "x": 330,
+    "y": 426,
+    "callMs": 1506
+   },
+   "keyboardBefore": {
+    "y": 553,
+    "h": 233
+   },
+   "keyboardAfter": null,
+   "newEvents": 1,
+   "note": "TL n:188 kb:699 ih:699 || 251482 touchend 141,156 input:@144/168 kb699 ; 251490 focusin input:@144/168 kb699 ; 251493 click 141,156 input:@144/168 kb699 ; 251581 vv h389 top0 kb389 ; 257235 vv h699 top0 kb699 ; 264754 pointerdown 141,156 input:@144/168 kb699 ; 264755 touchstart 141,156 input:@144/168 kb699 ; 264812 pointerup 141,156 input:@144/168 kb699 ; 264813 touchend 141,156 input:@144/168 kb699 ; 264828 click 141,156 input:@144/168 kb699 ; 264905 vv h389 top0 kb389 ; 270285 vv h699 top0 kb699, note",
+   "shot": "B330-426.png"
+  }
+ ],
+ "installed": {
+  "note": "TL n:1 kb:699 ih:699 || 0 install iw390 ih699 kb699, note",
+  "shot": "installed.png"
+ },
+ "layoutBefore": {
+  "name": {
+   "x": 49,
+   "y": 191,
+   "w": 184,
+   "h": 24,
+   "label": "Name"
+  },
+  "trigger": {
+   "type": "Other",
+   "label": "Fruit",
+   "value": "Banana&#10;",
+   "x": 53,
+   "y": 349,
+   "w": 152,
+   "h": 20
+  },
+  "fruitLabel": {
+   "type": "Other",
+   "label": "Fruit",
+   "value": "",
+   "x": 40,
+   "y": 315,
+   "w": 202,
+   "h": 24,
+   "vis": "true"
+  }
+ },
+ "raiseTap": {
+  "x": 141,
+  "y": 203,
+  "callMs": 912
+ },
+ "keyboardUp": {
+  "keyboard": {
+   "y": 553,
+   "h": 233
+  },
+  "trigger": {
+   "type": "Other",
+   "label": "Fruit",
+   "x": 53,
+   "y": 349,
+   "w": 152,
+   "h": 20
+  },
+  "band": [
+   "Other:Horizontal scroll bar, 1 page@47,403,296x30",
+   "Other:@50,430,290x3",
+   "Other:Horizontal scroll bar, 1 page@47,403,296x30",
+   "Other:@50,430,290x3",
+   "Other:@0,436,390x98",
+   "Other:@0,436,390x98",
+   "Other:@52,436,286x32",
+   "Other:@52,436,286x32",
+   "Other:@52,436,286x32",
+   "Other:@52,436,286x32",
+   "Other:Address@70,445,250x15",
+   "Other:@0,436,390x100",
+   "Other:@0,468,390x68",
+   "Other:@0,468,390x68",
+   "Toolbar:Toolbar@0,478,390x48",
+   "Other:@0,478,390x48",
+   "Other:@16,478,358x48",
+   "Other:@16,478,358x48",
+   "Other:@15,478,359x48",
+   "Other:@15,478,51x48",
+   "Other:@69,478,51x48",
+   "Other:@324,478,50x48",
+   "Other:@0,436,390x100"
+  ],
+  "note": "TL n:8 kb:389 ih:699 || 0 install iw390 ih699 kb699 ; 9160 pointerdown 141,156 input:@144/168 kb699 ; 9162 touchstart 141,156 input:@144/168 kb699 ; 9230 pointerup 141,156 input:@144/168 kb699 ; 9233 touchend 141,156 input:@144/168 kb699 ; 9265 focusin input:@144/168 kb699 ; 9267 click 141,156 input:@144/168 kb699 ; 9332 vv h389 top0 kb389, note",
+  "shot": "kbup.png"
+ }
+}

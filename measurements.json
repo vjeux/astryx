@@ -1,0 +1,326 @@
+{
+ "device": {
+  "model": "iPhone 14",
+  "os": "iOS 26.2",
+  "browser": "Safari",
+  "taps": "real touches through WebDriverAgent, W3C pointer actions: down, 60 ms, up",
+  "predictiveText": "already off; the setting read back 0; nothing changed or restored",
+  "webViewTopPt": 47,
+  "source": "the record of the device run"
+ },
+ "body": {
+  "keyboardTopPt": 553,
+  "triggerPt": [
+   349,
+   369
+  ],
+  "bandPt": [
+   403,
+   433
+  ],
+  "bandHeightPt": 30,
+  "addressTextPt": [
+   445,
+   460
+  ],
+  "bandAboveKeyboardPx": [
+   120,
+   150
+  ]
+ },
+ "derived": {
+  "triggerBottomPt": 369,
+  "fruitLabelBottomPt": 339,
+  "maskUncoveredPillTopPt": 0.92,
+  "keyboardGoneAfterTriggerClickMs": [
+   467,
+   475
+  ],
+  "keyboardGoneAfterLabelClickMs": [
+   490,
+   498
+  ],
+  "triggerTaps": 6,
+  "labelTaps": 3
+ },
+ "triggerTaps": [
+  {
+   "file": "takes-flipped.json",
+   "story": "core-selector--flipped-overlay-beside-keyboard",
+   "take": 1,
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 997
+   },
+   "triggerFrame": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "pointerTarget": "span:Banana@302/322",
+   "clicks": [
+    "span:Banana@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 475,
+   "optionsShown": 5
+  },
+  {
+   "file": "takes-flipped.json",
+   "story": "core-selector--flipped-overlay-beside-keyboard",
+   "take": 2,
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1605
+   },
+   "triggerFrame": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "pointerTarget": "span:Grape@302/322",
+   "clicks": [
+    "input:@144/168",
+    "span:Grape@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 473,
+   "optionsShown": 5
+  },
+  {
+   "file": "takes-flipped.json",
+   "story": "core-selector--flipped-overlay-beside-keyboard",
+   "take": 3,
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1768
+   },
+   "triggerFrame": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "pointerTarget": "span:Fig@302/322",
+   "clicks": [
+    "input:@144/168",
+    "span:Fig@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 472,
+   "optionsShown": 5
+  },
+  {
+   "file": "takes-plain-fine.json",
+   "story": "core-selector--overlay-beside-keyboard",
+   "take": 1,
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1101
+   },
+   "triggerFrame": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "pointerTarget": "span:Banana@302/322",
+   "clicks": [
+    "span:Banana@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 474,
+   "optionsShown": 3
+  },
+  {
+   "file": "takes-plain-fine.json",
+   "story": "core-selector--overlay-beside-keyboard",
+   "take": 2,
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1532
+   },
+   "triggerFrame": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "pointerTarget": "span:Elderberry@302/322",
+   "clicks": [
+    "input:@144/168",
+    "span:Elderberry@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 467,
+   "optionsShown": 3
+  },
+  {
+   "file": "takes-plain-fine.json",
+   "story": "core-selector--overlay-beside-keyboard",
+   "take": 3,
+   "tap": {
+    "x": 129,
+    "y": 359,
+    "callMs": 1672
+   },
+   "triggerFrame": {
+    "x": 53,
+    "y": 349,
+    "w": 152,
+    "h": 20
+   },
+   "pointerTarget": "span:Elderberry@302/322",
+   "clicks": [
+    "input:@144/168",
+    "span:Elderberry@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 475,
+   "optionsShown": 3
+  },
+  {
+   "file": "takes-plain.json",
+   "story": "core-selector--overlay-beside-keyboard",
+   "take": 1,
+   "tap": {
+    "x": 141,
+    "y": 327,
+    "callMs": 961
+   },
+   "triggerFrame": {
+    "x": 40,
+    "y": 315,
+    "w": 202,
+    "h": 24
+   },
+   "pointerTarget": "label:Fruit@268/292",
+   "clicks": [
+    "label:Fruit@268/292",
+    "button[combobox]:Banana@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 498,
+   "optionsShown": 3
+  },
+  {
+   "file": "takes-plain.json",
+   "story": "core-selector--overlay-beside-keyboard",
+   "take": 2,
+   "tap": {
+    "x": 141,
+    "y": 327,
+    "callMs": 1630
+   },
+   "triggerFrame": {
+    "x": 40,
+    "y": 315,
+    "w": 202,
+    "h": 24
+   },
+   "pointerTarget": "label:Fruit@268/292",
+   "clicks": [
+    "input:@144/168",
+    "label:Fruit@268/292",
+    "button[combobox]:Date@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 490,
+   "optionsShown": 3
+  },
+  {
+   "file": "takes-plain.json",
+   "story": "core-selector--overlay-beside-keyboard",
+   "take": 3,
+   "tap": {
+    "x": 141,
+    "y": 327,
+    "callMs": 2105
+   },
+   "triggerFrame": {
+    "x": 40,
+    "y": 315,
+    "w": 202,
+    "h": 24
+   },
+   "pointerTarget": "label:Fruit@268/292",
+   "clicks": [
+    "input:@144/168",
+    "label:Fruit@268/292",
+    "button[combobox]:Date@302/322"
+   ],
+   "msFromLastClickToKeyboardGone": 492,
+   "optionsShown": 3
+  }
+ ],
+ "stills": [
+  {
+   "file": "11846-band-sweep.png",
+   "kept": "IHDR cHRM bKGD pHYs IDAT IDAT IDAT IEND",
+   "dropped": "tIME",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "11846-keyboard-up-layout.png",
+   "kept": "IHDR cHRM bKGD pHYs IDAT IDAT IDAT IDAT IDAT IEND",
+   "dropped": "tIME",
+   "pixelsUnchanged": true
+  },
+  {
+   "file": "11846-overlay-open.png",
+   "kept": "IHDR cHRM bKGD pHYs IDAT IDAT IDAT IDAT IDAT IEND",
+   "dropped": "tIME caNv",
+   "pixelsUnchanged": true
+  }
+ ],
+ "masks": {
+  "keyboard-up-layout": {
+   "maskPx": {
+    "color": "120,120,120",
+    "x0": 71,
+    "y0": 641,
+    "x1": 514,
+    "y1": 690,
+    "pixels": 19921
+   },
+   "maskPt": {
+    "x": [
+     47.33,
+     343.33
+    ],
+    "y": [
+     436.92,
+     470.18
+    ]
+   },
+   "mapping": "y from the still's own marks: the AX band's top line (row 590) at 403 pt and the keyboard-top line (rows 815-816) at 553 pt; x at 1.5 px per pt (585 px across 390 pt)",
+   "pillFrame": "Other@52,436,286x32 (x 52-338, y 436-468 pt)",
+   "addressElement": "Address@70,445,250x15 (x 70-320, y 445-460 pt)"
+  },
+  "band-sweep": {
+   "maskPx": {
+    "color": "120,120,120",
+    "x0": 139,
+    "y0": 590,
+    "x1": 1031,
+    "y1": 655,
+    "pixels": 58727
+   },
+   "maskPt": {
+    "x": [
+     46.33,
+     344
+    ],
+    "y": [
+     434.5,
+     440
+    ]
+   },
+   "mapping": "3 px per pt across, 12 px per pt down (4x stretch); the 395 pt tap dot's center on row 116",
+   "cropEndsAt": 440
+  }
+ },
+ "stillsNote": {
+  "overlayOpen": "both stories 1.3 s after a tap on the trigger (the record)",
+  "bandSweep": "390-440 pt, stretched 4 times vertically"
+ }
+}
