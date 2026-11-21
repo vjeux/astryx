@@ -11,12 +11,20 @@ Head: #12457 at 872843fa91b1e83a70fdf4c9415b0584376095aa, on its preview deploy.
 - On the head, they follow the label boxes: 50 / 56 / 56 at AX3, 58 / 66 / 66 at AX4, and 67 / 74 / 74 at AX5.
 - At AX3, AX4 and AX5, every size variant's labels spill past their segments on main. On the head, none does.
 - Both builds cut Day, Week and Month with an ellipsis at AX4 md and lg, and at AX5 sm, md and lg.
+- Against the b8c548d9 take, 16 of 16 story, size and build cells are identical.
 
 ## What changed since b8c548d9
 
 - `git diff --name-only b8c548d9 872843fa` lists two files. Storybook renders neither of them.
 - One is `packages/cli/assets/templates/themes/neutral/neutralTheme.ts`, the regenerated copy in the CLI bundle.
 - The other is `packages/core/src/SegmentedControl/__tests__/SegmentedControlTextSize.interaction.browser.spec.ts`, where a test comment changed in two lines.
+
+## Repeat of the b8c548d9 take
+
+- The b8c548d9 take is in measurements.json under `b8c548d9Take`, with its head b8c548d9 and main 7dfa4282.
+- Each segment's height, label box height, text line height and ellipsis flag is rounded to 0.1 px and compared cell by cell.
+- The head is compared with head b8c548d9, and main with main 7dfa4282. 16 of 16 cells are identical.
+- Each cell's values are in `repeatOfB8c548d9.perCell`.
 
 ## Default story (`core-segmentedcontrol--default`)
 
