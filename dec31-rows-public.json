@@ -1,0 +1,3415 @@
+{
+ "label": "test",
+ "rowMap": {
+  "#8080 Row A (physical iPhone 14 grow/shrink frames)": "rowA (+ rowA_streamFps)",
+  "#8080 Row B (real Pixel, six menu cells at N/R/S)": "rowB.N, rowB.R, rowB.S",
+  "#8080 Row C (4x first-visible paired medians, new - old)": "rowB.S_pairs[*].paired (and the paired field of 8080-actions-timing-noshrink in rowB.N/R/S)",
+  "#8080 held-projects at R, every attempt": "heldProjectsR_attempts.natural + .forced",
+  "#11859 step 6 (real Pixel)": "step6 (radioOld = the radio cell run with the old head as the page under test)",
+  "#11859 step 7 (physical iPhone)": "step7",
+  "#11859 step 8 (physical iPhone)": "step8",
+  "keyboard rows (kit v2)": "keyboard + keyboardSpot",
+  "spot checks (DEC-27 amended)": "spot",
+  "pointer row (a), earlier passed set, extra": "pointerRowA"
+ },
+ "definitions": {
+  "N": "the phone as is (CPU rate 1, animation scales 1)",
+  "S": "Chrome DevTools CPU throttling 4x, animation scales 1",
+  "R": "Reduce Motion: the three Android animation scales at 0 and the page reports prefers-reduced-motion: reduce",
+  "firstVisibleMedianMs": "median time from the tap to the first frame that shows the menu",
+  "growFramesMin": "fewest frames the open's size change spans across the runs (0 = shown at full size at once, the Reduce Motion design)",
+  "goneMedianMs": "median time from the outside tap to the frame the menu is gone",
+  "shrinkFramesMin": "fewest frames the close's size change spans",
+  "openedAll": "every run opened the menu",
+  "closedAll": "every run closed it",
+  "fullSizeFirstAll": "every run's first menu frame at its final size and place (or growing from the trigger to it)",
+  "swallowedAll": "held cells only: in every run a press-and-hold that went down while the open's hold was on did not act (the menu stayed open)",
+  "actsAfterHoldAll": "held cells only: in every run a tap after the hold acted",
+  "cancelledAll": "step 6: in every run the picked row's touchend was cancelled",
+  "tapThroughCount": "step 6: runs in which something beneath the menu received the touch",
+  "radioOld": "the radio cell is head-only in the pinned cells file, so its old-head side is a separate run with the old head as the page under test (runs 0 on the old side of the head run is expected)",
+  "nothingBeneath": "step 7/8: no click reached anything beneath the menu after the pick",
+  "pickAtLift": "step 7: the menu dispatched its own click on Folder C at the finger's lift",
+  "pickedTouchendReachedDocument": "step 7: whether the picked row's touchend reached the document (it did not: the row left the page with the menu)",
+  "moveToTouchendCancelled": "step 7: the tap on Move to had its touchend cancelled, so no native click followed",
+  "touchendMinusPointerupMs": "step 8: the pick's touchend arrives as the 600 ms task from its pointerup ends",
+  "main45201690": "step 8 control: main Production 45201690, which does not have #11859's fix (expected to fail: touchend not cancelled, a click beneath)",
+  "triggerBoxPixelsChanged": "pointer row (a): pixels of the trigger box (+-8 pt, 52920 px) that differ before the open vs after the close (ImageMagick AE, fuzz 6%); 0 = no ring left",
+  "pressBeforeHoldEndMs": "held attempts: how long before the hold ended the press went down"
+ },
+ "namedResults": {
+  "heldProjectsR": "natural R: new b01d48c1 let 5 of 16 in-hold presses act, old 4651f211 0 of 16; every failure had a hold ending at 291-307 ms with the press 28-35 ms before that end; old natural holds never passed 287 ms",
+  "oldHeadForcedLongHold": "forced long hold, same cell: with the press within 45 ms of the end of a hold longer than 290 ms, old 4651f211 let 3 of 13 act (holds 368, 375, 363 ms), new 1 of 12 (its one act was in the 1.5x CPU run, whose holds did not stretch: hold 305 ms, press 37 ms before); by DEC-31's regression test a pre-existing timing defect, not a #8080 regression"
+ },
+ "heads": {
+  "8080": {
+   "old": "4651f211",
+   "new": "b01d48c1"
+  },
+  "11859": {
+   "old": "d93fa3db",
+   "new": "ff541aa9"
+  }
+ },
+ "devices": {
+  "iphoneRowA_step8": "physical iPhone 14 (unit 1), iOS 26.2, Mobile Safari 26.2, Reduce Motion off",
+  "iphoneStep7": "physical iPhone 14 (unit 2), iOS 26.2, Mobile Safari 26.2, Reduce Motion off",
+  "keyboard": "real Pixel 8, Android 17, Chrome 155",
+  "keyboardSpot": "real Pixel 8 (a second unit), Android 17, Chrome 156"
+ },
+ "kits": {
+  "keyboard": "keyboard kit v2, sha256 676df5262e1abbfc13aa36dedf73a03c3863289f13090d9dd038130d240fb11b",
+  "android": "Android touch kit 6.3.5, package sha256 636a6f88c5c4d34812720ecc9dad4498c3eef216712bfa5b8b83fa32392388cb, run as a non-gating take on any Chrome version"
+ },
+ "rowA": [
+  {
+   "case": "more",
+   "build": "4651f211",
+   "openFrames": [
+    6,
+    7,
+    6
+   ],
+   "closeFrames": [
+    4,
+    4,
+    4
+   ]
+  },
+  {
+   "case": "more",
+   "build": "b01d48c1",
+   "openFrames": [
+    7,
+    8,
+    7
+   ],
+   "closeFrames": [
+    3,
+    4,
+    4
+   ]
+  },
+  {
+   "case": "actions",
+   "build": "4651f211",
+   "openFrames": [
+    6,
+    6,
+    6
+   ],
+   "closeFrames": [
+    4,
+    4,
+    3
+   ]
+  },
+  {
+   "case": "actions",
+   "build": "b01d48c1",
+   "openFrames": [
+    6,
+    7,
+    7
+   ],
+   "closeFrames": [
+    4,
+    4,
+    4
+   ]
+  },
+  {
+   "case": "projects",
+   "build": "4651f211",
+   "openFrames": [
+    7,
+    6,
+    8
+   ],
+   "closeFrames": [
+    3,
+    4,
+    4
+   ]
+  },
+  {
+   "case": "projects",
+   "build": "b01d48c1",
+   "openFrames": [
+    8,
+    8,
+    6
+   ],
+   "closeFrames": [
+    4,
+    3,
+    3
+   ]
+  },
+  {
+   "case": "controlled",
+   "build": "4651f211",
+   "openFrames": [
+    8,
+    7,
+    8
+   ],
+   "closeFrames": [
+    4,
+    4,
+    4
+   ]
+  },
+  {
+   "case": "controlled",
+   "build": "b01d48c1",
+   "openFrames": [
+    7,
+    7,
+    8
+   ],
+   "closeFrames": [
+    4,
+    3,
+    3
+   ]
+  }
+ ],
+ "rowA_streamFps": [
+  31.5,
+  41.2
+ ],
+ "rowB": {
+  "N": {
+   "device": "real Pixel 8 unit A, Android 17, Chrome 156",
+   "cells": [
+    {
+     "cell": "8080-actions",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 36,
+      "growFramesMin": 12,
+      "goneMedianMs": 178,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 38,
+      "growFramesMin": 12,
+      "goneMedianMs": 182,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-actions-timing-noshrink",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 40,
+      "growFramesMin": 12,
+      "goneMedianMs": 179,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "new": {
+      "firstVisibleMedianMs": 36,
+      "growFramesMin": 12,
+      "goneMedianMs": 175,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "paired": {
+      "pairs": 5,
+      "newMinusOldMs": [
+       -8,
+       -3,
+       -4,
+       -9,
+       -3
+      ],
+      "medianMs": -4
+     }
+    },
+    {
+     "cell": "8080-controlled",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 32,
+      "growFramesMin": 12,
+      "goneMedianMs": 170,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 34,
+      "growFramesMin": 12,
+      "goneMedianMs": 179,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-held-projects",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 36,
+      "growFramesMin": 11,
+      "goneMedianMs": 3170,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": true,
+      "actsAfterHoldAll": true,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 29,
+      "growFramesMin": 8,
+      "goneMedianMs": 3108,
+      "shrinkFramesMin": 10,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": true,
+      "actsAfterHoldAll": true,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-more",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 33,
+      "growFramesMin": 12,
+      "goneMedianMs": 172,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 33,
+      "growFramesMin": 12,
+      "goneMedianMs": 176,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-projects",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 46,
+      "growFramesMin": 12,
+      "goneMedianMs": 179,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 53,
+      "growFramesMin": 11,
+      "goneMedianMs": 182,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    }
+   ]
+  },
+  "R": {
+   "device": "real Pixel 8 unit C, Android 17, Chrome 157",
+   "cells": [
+    {
+     "cell": "8080-actions",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 34,
+      "growFramesMin": 0,
+      "goneMedianMs": 232,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 37,
+      "growFramesMin": 0,
+      "goneMedianMs": 236,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-actions-timing-noshrink",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 36,
+      "growFramesMin": 0,
+      "goneMedianMs": 238,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "new": {
+      "firstVisibleMedianMs": 32,
+      "growFramesMin": 0,
+      "goneMedianMs": 227,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "paired": {
+      "pairs": 5,
+      "newMinusOldMs": [
+       -2,
+       -4,
+       -7,
+       -3,
+       -5
+      ],
+      "medianMs": -4
+     }
+    },
+    {
+     "cell": "8080-controlled",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 30,
+      "growFramesMin": 0,
+      "goneMedianMs": 235,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 31,
+      "growFramesMin": 0,
+      "goneMedianMs": 235,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-held-projects",
+     "profile": "R",
+     "status": "failed",
+     "reasons": [
+      "missing or not met in the take output: summary.head.swallowedAll==true, summary.head.actsAfterHoldAll==true"
+     ],
+     "old": {
+      "firstVisibleMedianMs": 22,
+      "growFramesMin": 0,
+      "goneMedianMs": 3234,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": true,
+      "actsAfterHoldAll": true,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 30,
+      "growFramesMin": 0,
+      "goneMedianMs": 248,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-more",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 30,
+      "growFramesMin": 0,
+      "goneMedianMs": 229,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 28,
+      "growFramesMin": 0,
+      "goneMedianMs": 236,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-projects",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 44,
+      "growFramesMin": 0,
+      "goneMedianMs": 238,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 54,
+      "growFramesMin": 0,
+      "goneMedianMs": 232,
+      "shrinkFramesMin": 0,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    }
+   ]
+  },
+  "S": {
+   "device": "real Pixel 8 unit D, Android 17, Chrome 157",
+   "cells": [
+    {
+     "cell": "8080-actions",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 89,
+      "growFramesMin": 12,
+      "goneMedianMs": 208,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 76,
+      "growFramesMin": 12,
+      "goneMedianMs": 206,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-actions-timing-noshrink",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 81,
+      "growFramesMin": 11,
+      "goneMedianMs": 212,
+      "shrinkFramesMin": 7,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "new": {
+      "firstVisibleMedianMs": 89,
+      "growFramesMin": 11,
+      "goneMedianMs": 222,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "paired": {
+      "pairs": 5,
+      "newMinusOldMs": [
+       -4,
+       8,
+       6,
+       4,
+       8
+      ],
+      "medianMs": 6
+     }
+    },
+    {
+     "cell": "8080-controlled",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 78,
+      "growFramesMin": 12,
+      "goneMedianMs": 215,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 67,
+      "growFramesMin": 11,
+      "goneMedianMs": 210,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-held-projects",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 87,
+      "growFramesMin": 10,
+      "goneMedianMs": 4018,
+      "shrinkFramesMin": 10,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": true,
+      "actsAfterHoldAll": true,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 82,
+      "growFramesMin": 10,
+      "goneMedianMs": 3929,
+      "shrinkFramesMin": 10,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": true,
+      "actsAfterHoldAll": true,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-more",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 66,
+      "growFramesMin": 12,
+      "goneMedianMs": 201,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 78,
+      "growFramesMin": 11,
+      "goneMedianMs": 199,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "8080-projects",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 161,
+      "growFramesMin": 12,
+      "goneMedianMs": 229,
+      "shrinkFramesMin": 7,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     },
+     "new": {
+      "firstVisibleMedianMs": 132,
+      "growFramesMin": 12,
+      "goneMedianMs": 226,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 2
+     }
+    }
+   ]
+  },
+  "S_pairs": {
+   "device": "real Pixel 8 unit D, Android 17, Chrome 157",
+   "cells": [
+    {
+     "cell": "8080-actions-timing-noshrink",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 90,
+      "growFramesMin": 12,
+      "goneMedianMs": 223,
+      "shrinkFramesMin": 8,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "new": {
+      "firstVisibleMedianMs": 80,
+      "growFramesMin": 12,
+      "goneMedianMs": 209,
+      "shrinkFramesMin": 7,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "paired": {
+      "pairs": 5,
+      "newMinusOldMs": [
+       5,
+       -10,
+       -8,
+       -12,
+       -9
+      ],
+      "medianMs": -9
+     }
+    },
+    {
+     "cell": "8080-timing-more",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "firstVisibleMedianMs": 70,
+      "growFramesMin": 12,
+      "goneMedianMs": 207,
+      "shrinkFramesMin": 7,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "new": {
+      "firstVisibleMedianMs": 78,
+      "growFramesMin": 11,
+      "goneMedianMs": 215,
+      "shrinkFramesMin": 7,
+      "openedAll": true,
+      "closedAll": true,
+      "fullSizeFirstAll": true,
+      "swallowedAll": false,
+      "actsAfterHoldAll": false,
+      "runs": 5
+     },
+     "paired": {
+      "pairs": 5,
+      "newMinusOldMs": [
+       5,
+       9,
+       4,
+       7,
+       14
+      ],
+      "medianMs": 7
+     }
+    }
+   ]
+  }
+ },
+ "heldProjectsR_extra": {
+  "note": "extra runs of 8080-held-projects at R, each in its own folder; the unit A spot-check take is spot.8080 (not repeated here)",
+  "unitC": [
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "kept",
+    "reasons": [],
+    "old": {
+     "firstVisibleMedianMs": 30,
+     "growFramesMin": 0,
+     "goneMedianMs": 3196,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 38,
+     "growFramesMin": 0,
+     "goneMedianMs": 3098,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    }
+   },
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "kept",
+    "reasons": [],
+    "old": {
+     "firstVisibleMedianMs": 29,
+     "growFramesMin": 0,
+     "goneMedianMs": 3157,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 25,
+     "growFramesMin": 0,
+     "goneMedianMs": 3183,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    }
+   }
+  ],
+  "unitA": [
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "kept",
+    "reasons": [],
+    "old": {
+     "firstVisibleMedianMs": 30,
+     "growFramesMin": 0,
+     "goneMedianMs": 3145,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 26,
+     "growFramesMin": 0,
+     "goneMedianMs": 3145,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    }
+   },
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "failed",
+    "reasons": [
+     "missing or not met in the take output: summary.head.swallowedAll==true, summary.head.actsAfterHoldAll==true"
+    ],
+    "old": {
+     "firstVisibleMedianMs": 26,
+     "growFramesMin": 0,
+     "goneMedianMs": 3029,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 29,
+     "growFramesMin": 0,
+     "goneMedianMs": 232,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": false,
+     "actsAfterHoldAll": false,
+     "runs": 2
+    }
+   }
+  ],
+  "unitB": [
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "failed",
+    "reasons": [
+     "missing or not met in the take output: summary.head.swallowedAll==true, summary.head.actsAfterHoldAll==true"
+    ],
+    "old": {
+     "firstVisibleMedianMs": 30,
+     "growFramesMin": 0,
+     "goneMedianMs": 3171,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 33,
+     "growFramesMin": 0,
+     "goneMedianMs": 244,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": false,
+     "actsAfterHoldAll": false,
+     "runs": 2
+    }
+   },
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "failed",
+    "reasons": [
+     "missing or not met in the take output: summary.head.swallowedAll==true, summary.head.actsAfterHoldAll==true"
+    ],
+    "old": {
+     "firstVisibleMedianMs": 19,
+     "growFramesMin": 0,
+     "goneMedianMs": 3186,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 30,
+     "growFramesMin": 0,
+     "goneMedianMs": 242,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": false,
+     "actsAfterHoldAll": false,
+     "runs": 2
+    }
+   }
+  ]
+ },
+ "heldProjectsR_attempts": {
+  "natural": [
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T130427",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 271,
+    "holdEndMs": 306,
+    "pressBeforeHoldEndMs": 35,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T130427",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 299,
+    "holdEndMs": 271,
+    "pressBeforeHoldEndMs": -28,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T130427",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 124,
+    "holdEndMs": 264,
+    "pressBeforeHoldEndMs": 140,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T130427",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 249,
+    "holdEndMs": 276,
+    "pressBeforeHoldEndMs": 27,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T130427",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 290,
+    "holdEndMs": 272,
+    "pressBeforeHoldEndMs": -18,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T130427",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 92,
+    "holdEndMs": 267,
+    "pressBeforeHoldEndMs": 175,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132359",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 217,
+    "holdEndMs": 273,
+    "pressBeforeHoldEndMs": 56,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132359",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 198,
+    "holdEndMs": 270,
+    "pressBeforeHoldEndMs": 72,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132359",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 298,
+    "holdEndMs": 279,
+    "pressBeforeHoldEndMs": -19,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132359",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 151,
+    "holdEndMs": 260,
+    "pressBeforeHoldEndMs": 109,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132359",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 251,
+    "holdEndMs": 280,
+    "pressBeforeHoldEndMs": 29,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132744",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 296,
+    "holdEndMs": 270,
+    "pressBeforeHoldEndMs": -26,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132744",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 148,
+    "holdEndMs": 259,
+    "pressBeforeHoldEndMs": 111,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132744",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 236,
+    "holdEndMs": 281,
+    "pressBeforeHoldEndMs": 45,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132744",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 282,
+    "holdEndMs": 276,
+    "pressBeforeHoldEndMs": -6,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132744",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 154,
+    "holdEndMs": 261,
+    "pressBeforeHoldEndMs": 107,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T132744",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 253,
+    "holdEndMs": 273,
+    "pressBeforeHoldEndMs": 20,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T131754",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 303,
+    "holdEndMs": 266,
+    "pressBeforeHoldEndMs": -37,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T131754",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 132,
+    "holdEndMs": 263,
+    "pressBeforeHoldEndMs": 131,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T131754",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 252,
+    "holdEndMs": 277,
+    "pressBeforeHoldEndMs": 25,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T131754",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 302,
+    "holdEndMs": 279,
+    "pressBeforeHoldEndMs": -23,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T131754",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 129,
+    "holdEndMs": 266,
+    "pressBeforeHoldEndMs": 137,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T131754",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 254,
+    "holdEndMs": 280,
+    "pressBeforeHoldEndMs": 26,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132454",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 282,
+    "holdEndMs": 278,
+    "pressBeforeHoldEndMs": -4,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132454",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 81,
+    "holdEndMs": 262,
+    "pressBeforeHoldEndMs": 181,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132454",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 252,
+    "holdEndMs": 280,
+    "pressBeforeHoldEndMs": 28,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132454",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 255,
+    "holdEndMs": 287,
+    "pressBeforeHoldEndMs": 32,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132454",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 273,
+    "holdEndMs": 267,
+    "pressBeforeHoldEndMs": -6,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132454",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 119,
+    "holdEndMs": 280,
+    "pressBeforeHoldEndMs": 161,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132837",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 263,
+    "holdEndMs": 291,
+    "pressBeforeHoldEndMs": 28,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132837",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 282,
+    "holdEndMs": 278,
+    "pressBeforeHoldEndMs": -4,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132837",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 135,
+    "holdEndMs": 274,
+    "pressBeforeHoldEndMs": 139,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132837",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 291,
+    "holdEndMs": 278,
+    "pressBeforeHoldEndMs": -13,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132837",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 139,
+    "holdEndMs": 264,
+    "pressBeforeHoldEndMs": 125,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit A",
+    "run": "20261121T132837",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 275,
+    "holdEndMs": 307,
+    "pressBeforeHoldEndMs": 32,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T132902",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 260,
+    "holdEndMs": 288,
+    "pressBeforeHoldEndMs": 28,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T132902",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 277,
+    "holdEndMs": 270,
+    "pressBeforeHoldEndMs": -7,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T132902",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 141,
+    "holdEndMs": 268,
+    "pressBeforeHoldEndMs": 127,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T132902",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 274,
+    "holdEndMs": 265,
+    "pressBeforeHoldEndMs": -9,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T132902",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 151,
+    "holdEndMs": 270,
+    "pressBeforeHoldEndMs": 119,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T132902",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 269,
+    "holdEndMs": 300,
+    "pressBeforeHoldEndMs": 31,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T133244",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 263,
+    "holdEndMs": 291,
+    "pressBeforeHoldEndMs": 28,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T133244",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 288,
+    "holdEndMs": 277,
+    "pressBeforeHoldEndMs": -11,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T133244",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 121,
+    "holdEndMs": 267,
+    "pressBeforeHoldEndMs": 146,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T133244",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 298,
+    "holdEndMs": 269,
+    "pressBeforeHoldEndMs": -29,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T133244",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 57,
+    "holdEndMs": 253,
+    "pressBeforeHoldEndMs": 196,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "natural R (pinned kit)",
+    "device": "Pixel 8 unit B",
+    "run": "20261121T133244",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 260,
+    "holdEndMs": 283,
+    "pressBeforeHoldEndMs": 23,
+    "pressInHold": true,
+    "swallowed": true
+   }
+  ],
+  "forced": [
+   {
+    "arm": "R + 1.5x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T133925",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 268,
+    "holdEndMs": 305,
+    "pressBeforeHoldEndMs": 37,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "R + 1.5x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T133925",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 292,
+    "holdEndMs": 267,
+    "pressBeforeHoldEndMs": -25,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "R + 1.5x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T133925",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 0,
+    "pressDownMs": 163,
+    "holdEndMs": 280,
+    "pressBeforeHoldEndMs": 117,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 1.5x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T133925",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 286,
+    "holdEndMs": 280,
+    "pressBeforeHoldEndMs": -6,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "R + 1.5x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T133925",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 145,
+    "holdEndMs": 280,
+    "pressBeforeHoldEndMs": 135,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 1.5x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T133925",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 297,
+    "holdEndMs": 285,
+    "pressBeforeHoldEndMs": -12,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "R + 1.5x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T133925",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 111,
+    "holdEndMs": 275,
+    "pressBeforeHoldEndMs": 164,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134402",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 272,
+    "holdEndMs": 379,
+    "pressBeforeHoldEndMs": 107,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134402",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 298,
+    "holdEndMs": 350,
+    "pressBeforeHoldEndMs": 52,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134402",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 288,
+    "holdEndMs": 359,
+    "pressBeforeHoldEndMs": 71,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134402",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 228,
+    "holdEndMs": 364,
+    "pressBeforeHoldEndMs": 136,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134736",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 259,
+    "holdEndMs": 396,
+    "pressBeforeHoldEndMs": 137,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134736",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 232,
+    "holdEndMs": 352,
+    "pressBeforeHoldEndMs": 120,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134736",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 291,
+    "holdEndMs": 344,
+    "pressBeforeHoldEndMs": 53,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + 4x CPU",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T134736",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 278,
+    "holdEndMs": 332,
+    "pressBeforeHoldEndMs": 54,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134612",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 277,
+    "holdEndMs": 337,
+    "pressBeforeHoldEndMs": 60,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134612",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 227,
+    "holdEndMs": 331,
+    "pressBeforeHoldEndMs": 104,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134612",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 271,
+    "holdEndMs": 344,
+    "pressBeforeHoldEndMs": 73,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134612",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 274,
+    "holdEndMs": 334,
+    "pressBeforeHoldEndMs": 60,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134958",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 280,
+    "holdEndMs": 351,
+    "pressBeforeHoldEndMs": 71,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134958",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 120,
+    "pressDownMs": 307,
+    "holdEndMs": 334,
+    "pressBeforeHoldEndMs": 27,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134958",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 291,
+    "holdEndMs": 345,
+    "pressBeforeHoldEndMs": 54,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 120 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T134958",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 120,
+    "pressDownMs": 271,
+    "holdEndMs": 336,
+    "pressBeforeHoldEndMs": 65,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135754",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 339,
+    "holdEndMs": 361,
+    "pressBeforeHoldEndMs": 22,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135754",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 274,
+    "holdEndMs": 333,
+    "pressBeforeHoldEndMs": 59,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135754",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 358,
+    "holdEndMs": 341,
+    "pressBeforeHoldEndMs": -17,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135754",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 135,
+    "holdEndMs": 334,
+    "pressBeforeHoldEndMs": 199,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135754",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 272,
+    "holdEndMs": 337,
+    "pressBeforeHoldEndMs": 65,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140523",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 245,
+    "holdEndMs": 336,
+    "pressBeforeHoldEndMs": 91,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140523",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 291,
+    "holdEndMs": 336,
+    "pressBeforeHoldEndMs": 45,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140523",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 281,
+    "holdEndMs": 329,
+    "pressBeforeHoldEndMs": 48,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140523",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 330,
+    "holdEndMs": 360,
+    "pressBeforeHoldEndMs": 30,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135414",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 288,
+    "holdEndMs": 327,
+    "pressBeforeHoldEndMs": 39,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135414",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 312,
+    "holdEndMs": 338,
+    "pressBeforeHoldEndMs": 26,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135414",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 282,
+    "holdEndMs": 339,
+    "pressBeforeHoldEndMs": 57,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135414",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 310,
+    "holdEndMs": 334,
+    "pressBeforeHoldEndMs": 24,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140131",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 318,
+    "holdEndMs": 342,
+    "pressBeforeHoldEndMs": 24,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140131",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 150,
+    "pressDownMs": 299,
+    "holdEndMs": 341,
+    "pressBeforeHoldEndMs": 42,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140131",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 310,
+    "holdEndMs": 341,
+    "pressBeforeHoldEndMs": 31,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 150 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140131",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 150,
+    "pressDownMs": 309,
+    "holdEndMs": 349,
+    "pressBeforeHoldEndMs": 40,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135414",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 277,
+    "holdEndMs": 321,
+    "pressBeforeHoldEndMs": 44,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135414",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 309,
+    "holdEndMs": 338,
+    "pressBeforeHoldEndMs": 29,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135414",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 306,
+    "holdEndMs": 337,
+    "pressBeforeHoldEndMs": 31,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T135414",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 321,
+    "holdEndMs": 344,
+    "pressBeforeHoldEndMs": 23,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140139",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 293,
+    "holdEndMs": 336,
+    "pressBeforeHoldEndMs": 43,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140139",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 316,
+    "holdEndMs": 353,
+    "pressBeforeHoldEndMs": 37,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140139",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 306,
+    "holdEndMs": 336,
+    "pressBeforeHoldEndMs": 30,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140139",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 348,
+    "holdEndMs": 335,
+    "pressBeforeHoldEndMs": -13,
+    "pressInHold": false,
+    "swallowed": false
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit D",
+    "run": "20261121T140139",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 0,
+    "pressDownMs": 129,
+    "holdEndMs": 328,
+    "pressBeforeHoldEndMs": 199,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135753",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 330,
+    "holdEndMs": 348,
+    "pressBeforeHoldEndMs": 18,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135753",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 340,
+    "holdEndMs": 368,
+    "pressBeforeHoldEndMs": 28,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135753",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 343,
+    "holdEndMs": 375,
+    "pressBeforeHoldEndMs": 32,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T135753",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 304,
+    "holdEndMs": 335,
+    "pressBeforeHoldEndMs": 31,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140509",
+    "build": "b01d48c1",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 286,
+    "holdEndMs": 342,
+    "pressBeforeHoldEndMs": 56,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140509",
+    "build": "4651f211",
+    "rep": 1,
+    "pressDelayMs": 160,
+    "pressDownMs": 285,
+    "holdEndMs": 329,
+    "pressBeforeHoldEndMs": 44,
+    "pressInHold": true,
+    "swallowed": true
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140509",
+    "build": "4651f211",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 335,
+    "holdEndMs": 363,
+    "pressBeforeHoldEndMs": 28,
+    "pressInHold": true,
+    "swallowed": false
+   },
+   {
+    "arm": "R + animations at 0.75x, press delay 160 ms",
+    "device": "Pixel 8 unit C",
+    "run": "20261121T140509",
+    "build": "b01d48c1",
+    "rep": 2,
+    "pressDelayMs": 160,
+    "pressDownMs": 276,
+    "holdEndMs": 338,
+    "pressBeforeHoldEndMs": 62,
+    "pressInHold": true,
+    "swallowed": true
+   }
+  ]
+ },
+ "step6": {
+  "N": {
+   "device": "real Pixel 8 unit B, Android 17, Chrome 157",
+   "cells": [
+    {
+     "cell": "11859-pick-busy",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "11859-pick-plain",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "11859-radio-busy",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": false,
+      "cancelledAll": false,
+      "tapThroughCount": 0,
+      "runs": 0
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    }
+   ],
+   "radioOld": [
+    {
+     "cell": "11859-radio-busy",
+     "profile": "N",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": null
+    }
+   ]
+  },
+  "S": {
+   "device": "real Pixel 8 unit B, Android 17, Chrome 157",
+   "cells": [
+    {
+     "cell": "11859-pick-busy",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "11859-pick-plain",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "11859-radio-busy",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": false,
+      "cancelledAll": false,
+      "tapThroughCount": 0,
+      "runs": 0
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    }
+   ],
+   "radioOld": [
+    {
+     "cell": "11859-radio-busy",
+     "profile": "S",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": null
+    }
+   ]
+  },
+  "R": {
+   "device": "real Pixel 8 unit B, Android 17, Chrome 157",
+   "cells": [
+    {
+     "cell": "11859-pick-busy",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "11859-pick-plain",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    },
+    {
+     "cell": "11859-radio-busy",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": false,
+      "cancelledAll": false,
+      "tapThroughCount": 0,
+      "runs": 0
+     },
+     "new": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     }
+    }
+   ],
+   "radioOld": [
+    {
+     "cell": "11859-radio-busy",
+     "profile": "R",
+     "status": "kept",
+     "reasons": [],
+     "old": {
+      "closedAll": true,
+      "cancelledAll": true,
+      "tapThroughCount": 0,
+      "runs": 2
+     },
+     "new": null
+    }
+   ]
+  }
+ },
+ "spot": {
+  "8080": [
+   {
+    "cell": "8080-actions",
+    "profile": "R",
+    "status": "kept",
+    "reasons": [],
+    "old": {
+     "firstVisibleMedianMs": 33,
+     "growFramesMin": 0,
+     "goneMedianMs": 237,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": false,
+     "actsAfterHoldAll": false,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 35,
+     "growFramesMin": 0,
+     "goneMedianMs": 233,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": false,
+     "actsAfterHoldAll": false,
+     "runs": 2
+    }
+   },
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "kept",
+    "reasons": [],
+    "old": {
+     "firstVisibleMedianMs": 28,
+     "growFramesMin": 0,
+     "goneMedianMs": 3114,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    },
+    "new": {
+     "firstVisibleMedianMs": 27,
+     "growFramesMin": 0,
+     "goneMedianMs": 3233,
+     "shrinkFramesMin": 0,
+     "openedAll": true,
+     "closedAll": true,
+     "fullSizeFirstAll": true,
+     "swallowedAll": true,
+     "actsAfterHoldAll": true,
+     "runs": 2
+    }
+   }
+  ],
+  "11859": [
+   {
+    "cell": "11859-pick-busy",
+    "profile": "N",
+    "status": "kept",
+    "reasons": [],
+    "old": {
+     "closedAll": true,
+     "cancelledAll": true,
+     "tapThroughCount": 0,
+     "runs": 2
+    },
+    "new": {
+     "closedAll": true,
+     "cancelledAll": true,
+     "tapThroughCount": 0,
+     "runs": 2
+    }
+   }
+  ]
+ },
+ "step7": [
+  {
+   "take": "4651f211-r1",
+   "build": "4651f211",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "4651f211-r2",
+   "build": "4651f211",
+   "nothingBeneath": false,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": [
+    "click:BODY@page"
+   ]
+  },
+  {
+   "take": "4651f211-r3",
+   "build": "4651f211",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "b01d48c1-r1",
+   "build": "b01d48c1",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "b01d48c1-r2",
+   "build": "b01d48c1",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "b01d48c1-r3",
+   "build": "b01d48c1",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "d93fa3db-r1",
+   "build": "d93fa3db",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "d93fa3db-r2",
+   "build": "d93fa3db",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "d93fa3db-r3",
+   "build": "d93fa3db",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "ff541aa9-r1",
+   "build": "ff541aa9",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "ff541aa9-r2",
+   "build": "ff541aa9",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  },
+  {
+   "take": "ff541aa9-r3",
+   "build": "ff541aa9",
+   "nothingBeneath": true,
+   "pickAtLift": true,
+   "pickedTouchendReachedDocument": false,
+   "moveToTouchendCancelled": true,
+   "menuClosed": true,
+   "beneath": []
+  }
+ ],
+ "step8": [
+  {
+   "take": "d93fa3db-r1",
+   "build": "d93fa3db",
+   "result": "NOTHING BENEATH ACTS",
+   "touchendCancelled": true,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [],
+   "beneathClickAfterTouchendMs": null
+  },
+  {
+   "take": "d93fa3db-r2",
+   "build": "d93fa3db",
+   "result": "NOTHING BENEATH ACTS",
+   "touchendCancelled": true,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [],
+   "beneathClickAfterTouchendMs": null
+  },
+  {
+   "take": "d93fa3db-r3",
+   "build": "d93fa3db",
+   "result": "NOTHING BENEATH ACTS",
+   "touchendCancelled": true,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [],
+   "beneathClickAfterTouchendMs": null
+  },
+  {
+   "take": "ff541aa9-r1",
+   "build": "ff541aa9",
+   "result": "NOTHING BENEATH ACTS",
+   "touchendCancelled": true,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [],
+   "beneathClickAfterTouchendMs": null
+  },
+  {
+   "take": "ff541aa9-r2",
+   "build": "ff541aa9",
+   "result": "NOTHING BENEATH ACTS",
+   "touchendCancelled": true,
+   "touchendMinusPointerupMs": 601,
+   "beneath": [],
+   "beneathClickAfterTouchendMs": null
+  },
+  {
+   "take": "ff541aa9-r3",
+   "build": "ff541aa9",
+   "result": "NOTHING BENEATH ACTS",
+   "touchendCancelled": true,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [],
+   "beneathClickAfterTouchendMs": null
+  },
+  {
+   "take": "main-r1",
+   "build": "45201690",
+   "result": "BENEATH ACTS: beneath click",
+   "touchendCancelled": false,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [
+    "beneath click"
+   ],
+   "beneathClickAfterTouchendMs": 4
+  },
+  {
+   "take": "main-r2",
+   "build": "45201690",
+   "result": "NOTHING BENEATH ACTS",
+   "touchendCancelled": false,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [],
+   "beneathClickAfterTouchendMs": null
+  },
+  {
+   "take": "main-r3",
+   "build": "45201690",
+   "result": "BENEATH ACTS: beneath click",
+   "touchendCancelled": false,
+   "touchendMinusPointerupMs": 600,
+   "beneath": [
+    "beneath click"
+   ],
+   "beneathClickAfterTouchendMs": 3
+  }
+ ],
+ "keyboard": [
+  {
+   "take": "escape-4651f211-r1",
+   "build": "4651f211",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-4651f211-r2",
+   "build": "4651f211",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-4651f211-r3",
+   "build": "4651f211",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-b01d48c1-r1",
+   "build": "b01d48c1",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-b01d48c1-r2",
+   "build": "b01d48c1",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-b01d48c1-r3",
+   "build": "b01d48c1",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-d93fa3db-r1",
+   "build": "d93fa3db",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-d93fa3db-r2",
+   "build": "d93fa3db",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-d93fa3db-r3",
+   "build": "d93fa3db",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-ff541aa9-r1",
+   "build": "ff541aa9",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-ff541aa9-r2",
+   "build": "ff541aa9",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "escape-ff541aa9-r3",
+   "build": "ff541aa9",
+   "row": "escape",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-4651f211-r1",
+   "build": "4651f211",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-4651f211-r2",
+   "build": "4651f211",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-4651f211-r3",
+   "build": "4651f211",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-b01d48c1-r1",
+   "build": "b01d48c1",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-b01d48c1-r2",
+   "build": "b01d48c1",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-b01d48c1-r3",
+   "build": "b01d48c1",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-d93fa3db-r1",
+   "build": "d93fa3db",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-d93fa3db-r2",
+   "build": "d93fa3db",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-d93fa3db-r3",
+   "build": "d93fa3db",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-ff541aa9-r1",
+   "build": "ff541aa9",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-ff541aa9-r2",
+   "build": "ff541aa9",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-ff541aa9-r3",
+   "build": "ff541aa9",
+   "row": "tab",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-4651f211-r1",
+   "build": "4651f211",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-4651f211-r2",
+   "build": "4651f211",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-4651f211-r3",
+   "build": "4651f211",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-b01d48c1-r1",
+   "build": "b01d48c1",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-b01d48c1-r2",
+   "build": "b01d48c1",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-b01d48c1-r3",
+   "build": "b01d48c1",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-d93fa3db-r1",
+   "build": "d93fa3db",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-d93fa3db-r2",
+   "build": "d93fa3db",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-d93fa3db-r3",
+   "build": "d93fa3db",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-ff541aa9-r1",
+   "build": "ff541aa9",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-ff541aa9-r2",
+   "build": "ff541aa9",
+   "row": "typeahead",
+   "verdict": "PASS"
+  },
+  {
+   "take": "typeahead-ff541aa9-r3",
+   "build": "ff541aa9",
+   "row": "typeahead",
+   "verdict": "PASS"
+  }
+ ],
+ "keyboardSpot": [
+  {
+   "take": "tab-b01d48c1-p2",
+   "verdict": "PASS"
+  },
+  {
+   "take": "tab-ff541aa9-p2",
+   "verdict": "PASS"
+  }
+ ],
+ "pointerRowA": [
+  {
+   "take": "outside-4651f211-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-b01d48c1-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-d93fa3db-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-ff541aa9-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-4651f211-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-b01d48c1-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-d93fa3db-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-ff541aa9-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-4651f211-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-b01d48c1-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-d93fa3db-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-ff541aa9-r1",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-ff541aa9-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-d93fa3db-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-b01d48c1-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-4651f211-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-ff541aa9-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-d93fa3db-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-b01d48c1-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-4651f211-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-ff541aa9-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-d93fa3db-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-b01d48c1-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-4651f211-r2",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-4651f211-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-b01d48c1-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-d93fa3db-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "outside-ff541aa9-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-4651f211-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-b01d48c1-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-d93fa3db-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "pick-ff541aa9-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-4651f211-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-b01d48c1-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-d93fa3db-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  },
+  {
+   "take": "repress-ff541aa9-r3",
+   "menuClosed": true,
+   "triggerBoxPixelsChanged": 0,
+   "of": 52920,
+   "noRingUnderPointer": true
+  }
+ ]
+}
