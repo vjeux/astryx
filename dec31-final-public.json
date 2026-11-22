@@ -1,0 +1,1696 @@
+{
+ "label": "test",
+ "heads": {
+  "8080": {
+   "old": "b01d48c1e6f331dbd948568234cc753663fdea53",
+   "new": "a5cfd2a9996e3f25a4c6f86d224afb79bafd7818",
+   "previous": "47b1104b518242ee79d6762ce473b7adec30575e"
+  },
+  "11859": {
+   "old": "ff541aa9a1a9d941d1e26a9b0d67156b7c3d99d8",
+   "new": "128a529dabdea3cd7717734bb218f664629fd965",
+   "previous": "948472f7eb5b862976e88678e1c9193a24648bd3"
+  },
+  "main": "3b1719aa1bdfa2b86bdd3fcb51184727abf48973"
+ },
+ "rerun": {
+  "summary": [
+   {
+    "pr": "#8080",
+    "row": "Row A: grow/shrink frames, more / controlled / actions / projects, 3 takes each",
+    "device": "physical iPhone 14 unit G (iOS 26.2)",
+    "old": "open 6–8 frames, close 3–4",
+    "new": "open 5–9, close 3–4",
+    "difference": "see the Row A table"
+   },
+   {
+    "pr": "#8080",
+    "row": "Row B: six menu cells, profile N",
+    "device": "Pixel 8 unit D (build CP3A.260905.009), Chrome 157.0.8103.78",
+    "old": "opens/closes: 6/6 cells",
+    "new": "6/6; 6/6 kept",
+    "difference": "first-visible median, new − old: -10–3 ms per cell"
+   },
+   {
+    "pr": "#8080",
+    "row": "Row B: six menu cells, profile R",
+    "device": "Pixel 8 unit D (build CP3A.260905.009), Chrome 157.0.8103.78",
+    "old": "opens/closes: 6/6 cells",
+    "new": "6/6; 6/6 kept",
+    "difference": "first-visible median, new − old: -4–11 ms per cell"
+   },
+   {
+    "pr": "#8080",
+    "row": "Row B: six menu cells, profile S",
+    "device": "Pixel 8 unit D (build CP3A.260905.009), Chrome 157.0.8103.78; Pixel 8 unit H (build CP3A.260905.009), Chrome 156.0.8078.79 (3 cells each; see the note)",
+    "old": "opens/closes: 6/6 cells",
+    "new": "6/6; 6/6 kept",
+    "difference": "first-visible median, new − old: -20–20 ms per cell"
+   },
+   {
+    "pr": "#8080",
+    "row": "Row C: paired first-visible medians, new − old",
+    "device": "Pixel 8 unit H (build CP3A.260905.009), Chrome 156.0.8078.79",
+    "old": "old b01d48c1",
+    "new": "new a5cfd2a9",
+    "difference": "8080-actions-timing-noshrink: 1 ms (5 pairs); 8080-timing-more: -4 ms (5 pairs)"
+   },
+   {
+    "pr": "#11859",
+    "row": "Step 9 (= step 6 cells), profile N",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78",
+    "old": "touchend cancelled, menu closed, nothing beneath: 3/3 cells",
+    "new": "3/3; 3/3 kept",
+    "difference": "none"
+   },
+   {
+    "pr": "#11859",
+    "row": "Step 9 (= step 6 cells), profile S",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78",
+    "old": "touchend cancelled, menu closed, nothing beneath: 3/3 cells",
+    "new": "3/3; 3/3 kept",
+    "difference": "none"
+   },
+   {
+    "pr": "#11859",
+    "row": "Step 9 (= step 6 cells), profile R",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78",
+    "old": "touchend cancelled, menu closed, nothing beneath: 3/3 cells",
+    "new": "3/3; 3/3 kept",
+    "difference": "none"
+   },
+   {
+    "pr": "#11859",
+    "row": "Step 9 spot check: busy pick at N, a second Pixel 8",
+    "device": "Pixel 8 unit C (build CP3A.260905.009), Chrome 155.0.8059.87",
+    "old": "pass",
+    "new": "pass",
+    "difference": "none (first attempt: page-load stall, re-taken)"
+   },
+   {
+    "pr": "#11859",
+    "row": "Step 10 (= step 7): Submenu pick, 3 takes",
+    "device": "physical iPhone 14 unit E",
+    "old": "3/3 all four measures",
+    "new": "3/3",
+    "difference": "none"
+   },
+   {
+    "pr": "#11859",
+    "row": "Step 11 (= step 8): pick + 600 ms task, full-screen button beneath, 3 takes",
+    "device": "physical iPhone 14 unit E",
+    "old": "3/3 nothing beneath + touchend cancelled",
+    "new": "3/3",
+    "difference": "none (main 3b1719aa control: touchend cancelled 0/3, click beneath 0/3)"
+   }
+  ],
+  "rowA": [
+   {
+    "case": "more",
+    "build": "old b01d48c1",
+    "open": [
+     8,
+     8,
+     7
+    ],
+    "close": [
+     3,
+     4,
+     4
+    ]
+   },
+   {
+    "case": "more",
+    "build": "new a5cfd2a9",
+    "open": [
+     8,
+     8,
+     7
+    ],
+    "close": [
+     4,
+     3,
+     3
+    ]
+   },
+   {
+    "case": "controlled",
+    "build": "old b01d48c1",
+    "open": [
+     6,
+     7,
+     8
+    ],
+    "close": [
+     4,
+     4,
+     3
+    ]
+   },
+   {
+    "case": "controlled",
+    "build": "new a5cfd2a9",
+    "open": [
+     7,
+     8,
+     8
+    ],
+    "close": [
+     4,
+     4,
+     3
+    ]
+   },
+   {
+    "case": "actions",
+    "build": "old b01d48c1",
+    "open": [
+     7,
+     7,
+     7
+    ],
+    "close": [
+     3,
+     3,
+     4
+    ]
+   },
+   {
+    "case": "actions",
+    "build": "new a5cfd2a9",
+    "open": [
+     6,
+     6,
+     7
+    ],
+    "close": [
+     3,
+     3,
+     3
+    ]
+   },
+   {
+    "case": "projects",
+    "build": "old b01d48c1",
+    "open": [
+     8,
+     6,
+     6
+    ],
+    "close": [
+     3,
+     4,
+     3
+    ]
+   },
+   {
+    "case": "projects",
+    "build": "new a5cfd2a9",
+    "open": [
+     9,
+     8,
+     5
+    ],
+    "close": [
+     4,
+     3,
+     3
+    ]
+   }
+  ],
+  "rowsBC": [
+   {
+    "cell": "8080-actions",
+    "profile": "N",
+    "status": "kept",
+    "old": "fv 42 ms, grow 12, gone 176 ms, shrink 8, runs 2",
+    "new": "fv 32 ms, grow 12, gone 177 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-actions-timing-noshrink",
+    "profile": "N",
+    "status": "kept",
+    "old": "fv 40 ms, grow 12, gone 176 ms, shrink 8, runs 5",
+    "new": "fv 35 ms, grow 12, gone 176 ms, shrink 8, runs 5",
+    "pairs": "median -5 ms over 5 pairs"
+   },
+   {
+    "cell": "8080-controlled",
+    "profile": "N",
+    "status": "kept",
+    "old": "fv 33 ms, grow 12, gone 178 ms, shrink 8, runs 2",
+    "new": "fv 31 ms, grow 12, gone 178 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-held-projects",
+    "profile": "N",
+    "status": "kept",
+    "old": "fv 28 ms, grow 12, gone 3113 ms, shrink 8, runs 2",
+    "new": "fv 29 ms, grow 12, gone 3073 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-more",
+    "profile": "N",
+    "status": "kept",
+    "old": "fv 33 ms, grow 12, gone 175 ms, shrink 8, runs 2",
+    "new": "fv 34 ms, grow 12, gone 175 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-projects",
+    "profile": "N",
+    "status": "kept",
+    "old": "fv 51 ms, grow 12, gone 188 ms, shrink 9, runs 2",
+    "new": "fv 54 ms, grow 12, gone 194 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-actions",
+    "profile": "R",
+    "status": "kept",
+    "old": "fv 35 ms, grow 0, gone 241 ms, shrink 0, runs 2",
+    "new": "fv 36 ms, grow 0, gone 238 ms, shrink 0, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-actions-timing-noshrink",
+    "profile": "R",
+    "status": "kept",
+    "old": "fv 37 ms, grow 0, gone 232 ms, shrink 0, runs 5",
+    "new": "fv 33 ms, grow 0, gone 237 ms, shrink 0, runs 5",
+    "pairs": "median -3 ms over 5 pairs"
+   },
+   {
+    "cell": "8080-controlled",
+    "profile": "R",
+    "status": "kept",
+    "old": "fv 32 ms, grow 0, gone 226 ms, shrink 0, runs 2",
+    "new": "fv 43 ms, grow 0, gone 238 ms, shrink 0, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-held-projects",
+    "profile": "R",
+    "status": "kept",
+    "old": "fv 32 ms, grow 0, gone 3145 ms, shrink 0, runs 2",
+    "new": "fv 34 ms, grow 0, gone 3137 ms, shrink 0, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-more",
+    "profile": "R",
+    "status": "kept",
+    "old": "fv 29 ms, grow 0, gone 223 ms, shrink 0, runs 2",
+    "new": "fv 35 ms, grow 0, gone 235 ms, shrink 0, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-projects",
+    "profile": "R",
+    "status": "kept",
+    "old": "fv 52 ms, grow 0, gone 235 ms, shrink 0, runs 2",
+    "new": "fv 51 ms, grow 0, gone 250 ms, shrink 0, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-actions",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 107 ms, grow 12, gone 239 ms, shrink 7, runs 2",
+    "new": "fv 103 ms, grow 12, gone 234 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-held-projects",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 99 ms, grow 8, gone 4247 ms, shrink 12, runs 2",
+    "new": "fv 119 ms, grow 1, gone 4210 ms, shrink 18, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-more",
+    "profile": "S",
+    "status": "failed",
+    "old": "fv ? ms, grow ?, gone ? ms, shrink ?, runs ?",
+    "new": "fv ? ms, grow ?, gone ? ms, shrink ?, runs ?",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-projects",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 160 ms, grow 12, gone 260 ms, shrink 8, runs 2",
+    "new": "fv 170 ms, grow 12, gone 270 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-actions-timing-noshrink",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 117 ms, grow 12, gone 248 ms, shrink 8, runs 5",
+    "new": "fv 99 ms, grow 12, gone 230 ms, shrink 8, runs 5",
+    "pairs": "median -18 ms over 5 pairs"
+   },
+   {
+    "cell": "8080-controlled",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 89 ms, grow 12, gone 252 ms, shrink 8, runs 2",
+    "new": "fv 69 ms, grow 12, gone 228 ms, shrink 7, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-more",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 92 ms, grow 12, gone 229 ms, shrink 8, runs 2",
+    "new": "fv 91 ms, grow 12, gone 258 ms, shrink 8, runs 2",
+    "pairs": ""
+   },
+   {
+    "cell": "8080-actions-timing-noshrink",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 116 ms, grow 11, gone 231 ms, shrink 8, runs 5",
+    "new": "fv 107 ms, grow 12, gone 236 ms, shrink 8, runs 5",
+    "pairs": "median 1 ms over 5 pairs"
+   },
+   {
+    "cell": "8080-timing-more",
+    "profile": "S",
+    "status": "kept",
+    "old": "fv 97 ms, grow 12, gone 239 ms, shrink 7, runs 5",
+    "new": "fv 89 ms, grow 12, gone 252 ms, shrink 8, runs 5",
+    "pairs": "median -4 ms over 5 pairs"
+   }
+  ],
+  "verdicts": [
+   {
+    "take": "8080-N",
+    "verdict": "VERDICT: PASS (N: 6/6 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit D (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "8080-R",
+    "verdict": "VERDICT: PASS (R: 6/6 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit D (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "8080-S",
+    "verdict": "VERDICT: FAIL (S: no complete run; 0 problem(s))",
+    "device": "Pixel 8 unit D (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "8080-S-rest",
+    "verdict": "VERDICT: PASS (S: 3/3 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit H (build CP3A.260905.009), Chrome 156.0.8078.79"
+   },
+   {
+    "take": "8080-S-pairs",
+    "verdict": "VERDICT: PASS (S: 2/2 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit H (build CP3A.260905.009), Chrome 156.0.8078.79"
+   },
+   {
+    "take": "11859-N",
+    "verdict": "VERDICT: PASS (N: 3/3 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "11859-S",
+    "verdict": "VERDICT: PASS (S: 3/3 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "11859-R",
+    "verdict": "VERDICT: PASS (R: 3/3 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "11859-radio-old-N",
+    "verdict": "VERDICT: PASS (N: 1/1 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "11859-radio-old-S",
+    "verdict": "VERDICT: PASS (S: 1/1 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "11859-radio-old-R",
+    "verdict": "VERDICT: PASS (R: 1/1 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit F (build CP3A.260905.009), Chrome 157.0.8103.78"
+   },
+   {
+    "take": "spot-11859-N",
+    "verdict": "VERDICT: PASS (N: 1/1 cells kept; 0 problem(s))",
+    "device": "Pixel 8 unit C (build CP3A.260905.009), Chrome 155.0.8059.87"
+   }
+  ],
+  "heldProjectsAtSFrames": [
+   {
+    "take": "earlier side-by-side",
+    "unit": "Pixel 8 unit H",
+    "build": "new 47b1104b",
+    "rep": 1,
+    "open": "8 (7)",
+    "close": "15 (13)",
+    "firstVisibleMs": 110
+   },
+   {
+    "take": "earlier side-by-side",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 1,
+    "open": "3 (2)",
+    "close": "22 (19)",
+    "firstVisibleMs": 113
+   },
+   {
+    "take": "earlier side-by-side",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 2,
+    "open": "3 (2)",
+    "close": "21 (18)",
+    "firstVisibleMs": 173
+   },
+   {
+    "take": "earlier side-by-side",
+    "unit": "Pixel 8 unit H",
+    "build": "new 47b1104b",
+    "rep": 2,
+    "open": "7 (6)",
+    "close": "17 (14)",
+    "firstVisibleMs": 101
+   },
+   {
+    "take": "this run, first S take",
+    "unit": "Pixel 8 unit D",
+    "build": "new a5cfd2a9",
+    "rep": 1,
+    "open": "3 (2)",
+    "close": "21 (18)",
+    "firstVisibleMs": 119
+   },
+   {
+    "take": "this run, first S take",
+    "unit": "Pixel 8 unit D",
+    "build": "old b01d48c1",
+    "rep": 1,
+    "open": "10 (9)",
+    "close": "15 (12)",
+    "firstVisibleMs": 114
+   },
+   {
+    "take": "this run, first S take",
+    "unit": "Pixel 8 unit D",
+    "build": "old b01d48c1",
+    "rep": 2,
+    "open": "9 (8)",
+    "close": "16 (13)",
+    "firstVisibleMs": 99
+   },
+   {
+    "take": "this run, first S take",
+    "unit": "Pixel 8 unit D",
+    "build": "new a5cfd2a9",
+    "rep": 2,
+    "open": "2 (1)",
+    "close": "22 (19)",
+    "firstVisibleMs": 183
+   },
+   {
+    "take": "re-take 1",
+    "unit": "Pixel 8 unit H",
+    "build": "new a5cfd2a9",
+    "rep": 1,
+    "open": "5 (4)",
+    "close": "19 (16)",
+    "firstVisibleMs": 134
+   },
+   {
+    "take": "re-take 1",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 1,
+    "open": "8 (7)",
+    "close": "18 (15)",
+    "firstVisibleMs": 110
+   },
+   {
+    "take": "re-take 1",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 2,
+    "open": "8 (7)",
+    "close": "17 (14)",
+    "firstVisibleMs": 111
+   },
+   {
+    "take": "re-take 1",
+    "unit": "Pixel 8 unit H",
+    "build": "new a5cfd2a9",
+    "rep": 2,
+    "open": "6 (5)",
+    "close": "18 (15)",
+    "firstVisibleMs": 106
+   },
+   {
+    "take": "re-take 2",
+    "unit": "Pixel 8 unit H",
+    "build": "new a5cfd2a9",
+    "rep": 1,
+    "open": "6 (5)",
+    "close": "18 (15)",
+    "firstVisibleMs": 123
+   },
+   {
+    "take": "re-take 2",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 1,
+    "open": "8 (7)",
+    "close": "17 (14)",
+    "firstVisibleMs": 110
+   },
+   {
+    "take": "re-take 2",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 2,
+    "open": "6 (5)",
+    "close": "18 (15)",
+    "firstVisibleMs": 99
+   },
+   {
+    "take": "re-take 2",
+    "unit": "Pixel 8 unit H",
+    "build": "new a5cfd2a9",
+    "rep": 2,
+    "open": "9 (8)",
+    "close": "16 (13)",
+    "firstVisibleMs": 101
+   },
+   {
+    "take": "re-take 3",
+    "unit": "Pixel 8 unit H",
+    "build": "new a5cfd2a9",
+    "rep": 1,
+    "open": "5 (4)",
+    "close": "18 (16)",
+    "firstVisibleMs": 128
+   },
+   {
+    "take": "re-take 3",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 1,
+    "open": "6 (5)",
+    "close": "17 (14)",
+    "firstVisibleMs": 110
+   },
+   {
+    "take": "re-take 3",
+    "unit": "Pixel 8 unit H",
+    "build": "old b01d48c1",
+    "rep": 2,
+    "open": "5 (4)",
+    "close": "18 (15)",
+    "firstVisibleMs": 115
+   },
+   {
+    "take": "re-take 3",
+    "unit": "Pixel 8 unit H",
+    "build": "new a5cfd2a9",
+    "rep": 2,
+    "open": "7 (6)",
+    "close": "16 (13)",
+    "firstVisibleMs": 105
+   }
+  ],
+  "step10": [
+   {
+    "take": "s4s10-s7-ff541aa9-r1",
+    "build": "ff541aa9",
+    "nothingBeneathActs": "true",
+    "pickAtLift": "true",
+    "pickedTouchendReachedDocument": "false",
+    "moveToTouchendCancelled": "true",
+    "menuClosed": "true"
+   },
+   {
+    "take": "s4s10-s7-ff541aa9-r2",
+    "build": "ff541aa9",
+    "nothingBeneathActs": "true",
+    "pickAtLift": "true",
+    "pickedTouchendReachedDocument": "false",
+    "moveToTouchendCancelled": "true",
+    "menuClosed": "true"
+   },
+   {
+    "take": "s4s10-s7-ff541aa9-r3",
+    "build": "ff541aa9",
+    "nothingBeneathActs": "true",
+    "pickAtLift": "true",
+    "pickedTouchendReachedDocument": "false",
+    "moveToTouchendCancelled": "true",
+    "menuClosed": "true"
+   },
+   {
+    "take": "s4s10-s7-128a529d-r1",
+    "build": "128a529d",
+    "nothingBeneathActs": "true",
+    "pickAtLift": "true",
+    "pickedTouchendReachedDocument": "false",
+    "moveToTouchendCancelled": "true",
+    "menuClosed": "true"
+   },
+   {
+    "take": "s4s10-s7-128a529d-r2",
+    "build": "128a529d",
+    "nothingBeneathActs": "true",
+    "pickAtLift": "true",
+    "pickedTouchendReachedDocument": "false",
+    "moveToTouchendCancelled": "true",
+    "menuClosed": "true"
+   },
+   {
+    "take": "s4s10-s7-128a529d-r3",
+    "build": "128a529d",
+    "nothingBeneathActs": "true",
+    "pickAtLift": "true",
+    "pickedTouchendReachedDocument": "false",
+    "moveToTouchendCancelled": "true",
+    "menuClosed": "true"
+   }
+  ],
+  "step11": [
+   {
+    "take": "s3s11-ff541aa9-r1",
+    "build": "ff541aa9",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "true",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-ff541aa9-r2",
+    "build": "ff541aa9",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "true",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-ff541aa9-r3",
+    "build": "ff541aa9",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "true",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-128a529d-r1",
+    "build": "128a529d",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "true",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-128a529d-r2",
+    "build": "128a529d",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "true",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-128a529d-r3",
+    "build": "128a529d",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "true",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-3b1719aa-r1",
+    "build": "3b1719aa",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "false",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-3b1719aa-r2",
+    "build": "3b1719aa",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "false",
+    "touchendMinusPointerup": "600 ms",
+    "busySpan": "600 ms",
+    "beneath": "none"
+   },
+   {
+    "take": "s3s11-3b1719aa-r3",
+    "build": "3b1719aa",
+    "result": "NOTHING BENEATH ACTS",
+    "touchendCancelled": "false",
+    "touchendMinusPointerup": "601 ms",
+    "busySpan": "601 ms",
+    "beneath": "none"
+   }
+  ],
+  "addendum12888": [
+   {
+    "pair": "8080",
+    "check": "no-sheet check",
+    "new": "a5cfd2a9",
+    "old": "b01d48c1",
+    "device": "Pixel 8 unit H",
+    "verdict": "VERDICT: PASS (N: 1/1 cells kept; 0 problem(s))",
+    "surfacesOpened": {
+     "new": 6,
+     "old": 6
+    },
+    "sheetOnAnySurface": {
+     "new": [],
+     "old": []
+    },
+    "controlRendersSheet": {
+     "new": true,
+     "old": true
+    }
+   },
+   {
+    "pair": "8080",
+    "check": "sheet control",
+    "new": "a5cfd2a9",
+    "old": "b01d48c1",
+    "device": "Pixel 8 unit H",
+    "verdict": "VERDICT: PASS (N: 1/1 cells kept; 0 problem(s))",
+    "pull": {
+     "pinch-zoom": {
+      "new": [
+       0,
+       0,
+       0
+      ],
+      "old": [
+       49.2,
+       49.2,
+       49.2
+      ]
+     },
+     "pan-y pinch-zoom": {
+      "new": [
+       49.2,
+       49.2,
+       49.2
+      ],
+      "old": [
+       49.3,
+       49.2,
+       49.2
+      ]
+     },
+     "pan-x": {
+      "new": [
+       49.2,
+       49.2,
+       49.2
+      ],
+      "old": [
+       49.3,
+       49.3,
+       49.3
+      ]
+     }
+    }
+   },
+   {
+    "pair": "11859",
+    "check": "no-sheet check",
+    "new": "128a529d",
+    "old": "ff541aa9",
+    "device": "Pixel 8 unit H",
+    "verdict": "VERDICT: PASS (N: 1/1 cells kept; 0 problem(s))",
+    "surfacesOpened": {
+     "new": 7,
+     "old": 7
+    },
+    "sheetOnAnySurface": {
+     "new": [],
+     "old": []
+    },
+    "controlRendersSheet": {
+     "new": true,
+     "old": true
+    }
+   },
+   {
+    "pair": "11859",
+    "check": "sheet control",
+    "new": "128a529d",
+    "old": "ff541aa9",
+    "device": "Pixel 8 unit H",
+    "verdict": "VERDICT: PASS (N: 1/1 cells kept; 0 problem(s))",
+    "pull": {
+     "pinch-zoom": {
+      "new": [
+       0,
+       0,
+       0
+      ],
+      "old": [
+       49.3,
+       49.2,
+       49.2
+      ]
+     },
+     "pan-y pinch-zoom": {
+      "new": [
+       49.3,
+       49.2,
+       49.3
+      ],
+      "old": [
+       49.2,
+       49.2,
+       49.2
+      ]
+     },
+     "pan-x": {
+      "new": [
+       49.2,
+       49.2,
+       49.2
+      ],
+      "old": [
+       49.2,
+       49.2,
+       49.3
+      ]
+     }
+    }
+   }
+  ]
+ },
+ "heldProjectsRecount": {
+  "pressCount": 196,
+  "rule": "in the hold = stamped more than 1 ms before the shield's remove() call; within 1 ms before it = after the hold by its end stamp; acted = a click dispatched within 800 ms; bar: at least 16 in the hold per build on at least 2 Pixel 8 units, plus a spot check",
+  "table": [
+   {
+    "profile": "N",
+    "build": "#8080 a5cfd2a9",
+    "presses": 38,
+    "inHold": 34,
+    "inHoldActed": 0,
+    "bShaped": 2,
+    "bLateness": "3.2–5.4",
+    "boundary": 0,
+    "boundaryActed": 0,
+    "after": 4,
+    "afterActed": 4,
+    "hz": "59.9–60.2"
+   },
+   {
+    "profile": "N",
+    "build": "#11859 128a529d",
+    "presses": 41,
+    "inHold": 34,
+    "inHoldActed": 0,
+    "bShaped": 2,
+    "bLateness": "3.1–10.1",
+    "boundary": 0,
+    "boundaryActed": 0,
+    "after": 7,
+    "afterActed": 7,
+    "hz": "59.9–60.2"
+   },
+   {
+    "profile": "R",
+    "build": "#8080 a5cfd2a9",
+    "presses": 57,
+    "inHold": 38,
+    "inHoldActed": 0,
+    "bShaped": 2,
+    "bLateness": "4.2–4.8",
+    "boundary": 0,
+    "boundaryActed": 0,
+    "after": 19,
+    "afterActed": 19,
+    "hz": "59.5–60.2"
+   },
+   {
+    "profile": "R",
+    "build": "#11859 128a529d",
+    "presses": 60,
+    "inHold": 37,
+    "inHoldActed": 0,
+    "bShaped": 0,
+    "bLateness": "–",
+    "boundary": 1,
+    "boundaryActed": 0,
+    "after": 22,
+    "afterActed": 22,
+    "hz": "59.9–60.2"
+   }
+  ],
+  "perUnit": [
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit A",
+    "role": "counting",
+    "build": "#8080 a5cfd2a9",
+    "inHold": "4 (0)",
+    "boundary": "0 (0)",
+    "after": "2 (2)"
+   },
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit A",
+    "role": "counting",
+    "build": "#11859 128a529d",
+    "inHold": "4 (0)",
+    "boundary": "0 (0)",
+    "after": "3 (3)"
+   },
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit B",
+    "role": "counting",
+    "build": "#8080 a5cfd2a9",
+    "inHold": "16 (0)",
+    "boundary": "0 (0)",
+    "after": "8 (8)"
+   },
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit B",
+    "role": "counting",
+    "build": "#11859 128a529d",
+    "inHold": "15 (0)",
+    "boundary": "1 (0)",
+    "after": "7 (7)"
+   },
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit C",
+    "role": "counting",
+    "build": "#8080 a5cfd2a9",
+    "inHold": "14 (0)",
+    "boundary": "0 (0)",
+    "after": "8 (8)"
+   },
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit C",
+    "role": "counting",
+    "build": "#11859 128a529d",
+    "inHold": "14 (0)",
+    "boundary": "0 (0)",
+    "after": "9 (9)"
+   },
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit D",
+    "role": "spot check",
+    "build": "#8080 a5cfd2a9",
+    "inHold": "4 (0)",
+    "boundary": "0 (0)",
+    "after": "1 (1)"
+   },
+   {
+    "profile": "R",
+    "unit": "Pixel 8 unit D",
+    "role": "spot check",
+    "build": "#11859 128a529d",
+    "inHold": "4 (0)",
+    "boundary": "0 (0)",
+    "after": "3 (3)"
+   },
+   {
+    "profile": "N",
+    "unit": "Pixel 8 unit A",
+    "role": "counting",
+    "build": "#8080 a5cfd2a9",
+    "inHold": "14 (0)",
+    "boundary": "0 (0)",
+    "after": "1 (1)"
+   },
+   {
+    "profile": "N",
+    "unit": "Pixel 8 unit A",
+    "role": "counting",
+    "build": "#11859 128a529d",
+    "inHold": "14 (0)",
+    "boundary": "0 (0)",
+    "after": "3 (3)"
+   },
+   {
+    "profile": "N",
+    "unit": "Pixel 8 unit E",
+    "role": "counting",
+    "build": "#8080 a5cfd2a9",
+    "inHold": "16 (0)",
+    "boundary": "0 (0)",
+    "after": "1 (1)"
+   },
+   {
+    "profile": "N",
+    "unit": "Pixel 8 unit E",
+    "role": "counting",
+    "build": "#11859 128a529d",
+    "inHold": "16 (0)",
+    "boundary": "0 (0)",
+    "after": "4 (4)"
+   },
+   {
+    "profile": "N",
+    "unit": "Pixel 8 unit D",
+    "role": "spot check",
+    "build": "#8080 a5cfd2a9",
+    "inHold": "4 (0)",
+    "boundary": "0 (0)",
+    "after": "2 (2)"
+   },
+   {
+    "profile": "N",
+    "unit": "Pixel 8 unit D",
+    "role": "spot check",
+    "build": "#11859 128a529d",
+    "inHold": "4 (0)",
+    "boundary": "0 (0)",
+    "after": "0 (0)"
+   }
+  ],
+  "boundary": [
+   {
+    "build": "#11859 128a529d",
+    "unit": "Pixel 8 unit B",
+    "folder": "8080-r4",
+    "rep": 1,
+    "msBeforeRemove": 0.4,
+    "acted": false
+   }
+  ],
+  "presses": "heldprojects-recount-presses.json"
+ },
+ "kits": {
+  "android": "Android touch kit 6.3.8",
+  "keyboard": {
+   "name": "keyboard kit v2",
+   "sha256": "676df5262e1abbfc13aa36dedf73a03c3863289f13090d9dd038130d240fb11b"
+  },
+  "phones": {
+   "pixel8": "Android 17, build CP3A.260905.009",
+   "iphone14": "iOS 26.2, Mobile Safari 26.2"
+  }
+ },
+ "keyboardCarried": {
+  "heads": {
+   "8080": "47b1104b518242ee79d6762ce473b7adec30575e",
+   "11859": "948472f7eb5b862976e88678e1c9193a24648bd3"
+  },
+  "table": [
+   {
+    "row": "escape",
+    "b01d48c1": "3/3 PASS",
+    "47b1104b": "3/3 PASS",
+    "ff541aa9": "3/3 PASS",
+    "948472f7": "3/3 PASS"
+   },
+   {
+    "row": "tab",
+    "b01d48c1": "3/3 PASS",
+    "47b1104b": "3/3 PASS",
+    "ff541aa9": "3/3 PASS",
+    "948472f7": "3/3 PASS"
+   },
+   {
+    "row": "typeahead",
+    "b01d48c1": "3/3 PASS",
+    "47b1104b": "3/3 PASS",
+    "ff541aa9": "3/3 PASS",
+    "948472f7": "3/3 PASS"
+   }
+  ],
+  "judge": [
+   {
+    "take": "d31k--escape-47b1104b-r1",
+    "build": "47b1104b",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-47b1104b-r2",
+    "build": "47b1104b",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-47b1104b-r3",
+    "build": "47b1104b",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-948472f7-r1",
+    "build": "948472f7",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-948472f7-r2",
+    "build": "948472f7",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-948472f7-r3",
+    "build": "948472f7",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-b01d48c1-r1",
+    "build": "b01d48c1",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-b01d48c1-r2",
+    "build": "b01d48c1",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-b01d48c1-r3",
+    "build": "b01d48c1",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-ff541aa9-r1",
+    "build": "ff541aa9",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-ff541aa9-r2",
+    "build": "ff541aa9",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--escape-ff541aa9-r3",
+    "build": "ff541aa9",
+    "case": "escape",
+    "rule": "focus back on the trigger with :focus-visible, menu closed",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-47b1104b-r1",
+    "build": "47b1104b",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-47b1104b-r2",
+    "build": "47b1104b",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-47b1104b-r3",
+    "build": "47b1104b",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-948472f7-r1",
+    "build": "948472f7",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-948472f7-r2",
+    "build": "948472f7",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-948472f7-r3",
+    "build": "948472f7",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-b01d48c1-r1",
+    "build": "b01d48c1",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-b01d48c1-r2",
+    "build": "b01d48c1",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-b01d48c1-r3",
+    "build": "b01d48c1",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-ff541aa9-r1",
+    "build": "ff541aa9",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-ff541aa9-r2",
+    "build": "ff541aa9",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--tab-ff541aa9-r3",
+    "build": "ff541aa9",
+    "case": "tab",
+    "rule": "menu closed, focus not in the menu, focus left the page",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-47b1104b-r1",
+    "build": "47b1104b",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-47b1104b-r2",
+    "build": "47b1104b",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-47b1104b-r3",
+    "build": "47b1104b",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-948472f7-r1",
+    "build": "948472f7",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-948472f7-r2",
+    "build": "948472f7",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-948472f7-r3",
+    "build": "948472f7",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-b01d48c1-r1",
+    "build": "b01d48c1",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-b01d48c1-r2",
+    "build": "b01d48c1",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-b01d48c1-r3",
+    "build": "b01d48c1",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-ff541aa9-r1",
+    "build": "ff541aa9",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-ff541aa9-r2",
+    "build": "ff541aa9",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   },
+   {
+    "take": "d31k--typeahead-ff541aa9-r3",
+    "build": "ff541aa9",
+    "case": "typeahead",
+    "rule": "type d -> Duplicate; Enter -> picked, focus back on the trigger",
+    "verdict": "PASS",
+    "why": [],
+    "device": "real Google Pixel 8, Android 17 (SDK 37, CP3A.260905.009), Chrome 157.0.8103.78, IME com.google.android.inputmethod.latin"
+   }
+  ],
+  "verify": [
+   {
+    "take": "d31k--escape-47b1104b-r1",
+    "build": "47b1104b",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-47b1104b-r2",
+    "build": "47b1104b",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-47b1104b-r3",
+    "build": "47b1104b",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-948472f7-r1",
+    "build": "948472f7",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-948472f7-r2",
+    "build": "948472f7",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-948472f7-r3",
+    "build": "948472f7",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-b01d48c1-r1",
+    "build": "b01d48c1",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-b01d48c1-r2",
+    "build": "b01d48c1",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-b01d48c1-r3",
+    "build": "b01d48c1",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-ff541aa9-r1",
+    "build": "ff541aa9",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-ff541aa9-r2",
+    "build": "ff541aa9",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--escape-ff541aa9-r3",
+    "build": "ff541aa9",
+    "verdict": "PASS (escape as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Escape: ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-47b1104b-r1",
+    "build": "47b1104b",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-47b1104b-r2",
+    "build": "47b1104b",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-47b1104b-r3",
+    "build": "47b1104b",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-948472f7-r1",
+    "build": "948472f7",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-948472f7-r2",
+    "build": "948472f7",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-948472f7-r3",
+    "build": "948472f7",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-b01d48c1-r1",
+    "build": "b01d48c1",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-b01d48c1-r2",
+    "build": "b01d48c1",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-b01d48c1-r3",
+    "build": "b01d48c1",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-ff541aa9-r1",
+    "build": "ff541aa9",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-ff541aa9-r2",
+    "build": "ff541aa9",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--tab-ff541aa9-r3",
+    "build": "ff541aa9",
+    "verdict": "PASS (tab as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; Tab (close): ring off (0/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-47b1104b-r1",
+    "build": "47b1104b",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-47b1104b-r2",
+    "build": "47b1104b",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-47b1104b-r3",
+    "build": "47b1104b",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-948472f7-r1",
+    "build": "948472f7",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-948472f7-r2",
+    "build": "948472f7",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-948472f7-r3",
+    "build": "948472f7",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-b01d48c1-r1",
+    "build": "b01d48c1",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-b01d48c1-r2",
+    "build": "b01d48c1",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-b01d48c1-r3",
+    "build": "b01d48c1",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-ff541aa9-r1",
+    "build": "ff541aa9",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-ff541aa9-r2",
+    "build": "ff541aa9",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   },
+   {
+    "take": "d31k--typeahead-ff541aa9-r3",
+    "build": "ff541aa9",
+    "verdict": "PASS (typeahead as expected)",
+    "reading": "Tab x1: ring ON (564/820), menu off (0 px) ; Enter (open): ring off (0/820), menu ON (8130 px) ; type d: ring off (0/820), menu ON (8167 px), outline top 1134 -> 1234 (moved DOWN) ; Enter (pick): ring ON (564/820), menu off (0 px)"
+   }
+  ]
+ },
+ "codeReading": "## What main changed under the stack, by its code (test)\n\nSince the heads passed in review, b01d48c1 and ff541aa9, main merged 117 commits into both. In the menu, hold, motion and sheet code these cells run, four change runtime code.\n\nThey are #13436, #13526, #9763 and #12888. Other merged changes reach shared code these cells also run, such as the hit area's read of settling animations (#13124) and prop merging (#12173).\n\n#13212 changes `motion/animatedLayout.ts`, which a menu loads only with its bottom-sheet presentation. No passed cell renders one.\n\n### #13436 and #13526, `Layer/inputHold.ts`\n\n- #13436 holds a press that went down during an input hold but arrives after a long task ends that hold.\n- #13526 also holds such a press after a release in time, for two of the hold's frame intervals.\n- With #13526, a finger's or a pen's pointerdown and touchstart get one verdict.\n- The menus' entrance holds use this hold, so it reaches every held cell, the held Projects cell included.\n\n### #9763, `motion/animator.ts` and `motion/reducedMotion.ts`\n\n- The animator and the reduced-motion fade now call `reducesMotion`. It reads the person's Reduce Motion setting, or a theme's `reducedMotion: 'always'` mark.\n- Before, each made the same two reads in two calls. So for any page, the answer is the same as before.\n- No public theme can set `'always'` yet. On every page these cells load, motion follows the person's setting alone.\n- The animator runs every menu's grow and fade, so this reaches every animated cell.\n\n### #12888, `utils/scrollView.ts` and `BottomSheet/useSheetGestures.ts`\n\n- In `utils/scrollView.ts`, `touchActionAllowsPan` takes an optional `boundary`, and its walk stops before it. Without one, the walk is the same as before.\n- `isInsideScrollView`, the one export of that file that `hooks/useMenuPress.ts` uses, is byte-identical at the old and new heads.\n- `Layer/outsidePress.ts` calls `touchActionAllowsPan` at line 164 and passes no `boundary`.\n- The behavior change is in `BottomSheet/useSheetGestures.ts`. A sheet's body drag now leaves a touch on content that allows no one-finger pan, such as a menu's fitting rows.\n- So it reaches a menu only when the menu, or other content, sits inside a bottom sheet. A sheet-presented menu's rows declare `auto`, so it leaves them alone.\n- On a real Pixel 8 (test), a check opened each menu surface of the passed cells: 6 for #8080's heads and 7 for #11859's.\n- No surface rendered a bottom sheet at any head. The positive control, the compact drill-in menu, rendered one at every head.\n- In #12888's own sheet case (`core-bottomsheet--showcase`), the same Pixel 8 pulled a row 100 px up.\n- Under `pinch-zoom`, the sheet moved 0 px at #8080's new head, a5cfd2a999, and 49 px at its old head, b01d48c1e6.\n- Under `pan-y pinch-zoom` and `pan-x`, it moved 49 px at both. #11859's heads, 128a529dab and ff541aa9a1, gave the same numbers.\n- That difference is main's intended change, not the stack's.\n",
+ "codeReadingSourceSha256": "f4074da85640372bc49aed224bc682e1c137cec90f7f0fcf34af91a3139a32e5"
+}
